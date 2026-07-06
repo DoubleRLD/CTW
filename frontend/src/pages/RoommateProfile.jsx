@@ -1,58 +1,217 @@
+import { useEffect, useState } from "react";
+import { roommateProfilesApi } from "../api/roommateProfiles";
+import { useAuth } from "../context/AuthContext";
+
+const DEFAULT_FORM = {
+  semester: "Fall",
+  semesterYear: new Date().getFullYear(),
+  bio: "",
+  sleepSchedule: "flexible",
+  cleanlinessLevel: 3,
+  noiseTolerance: 3,
+  studyHabits: "flexible",
+  socialLevel: 3,
+  smoking: false,
+  pets: false,
+  budgetMin: "",
+  budgetMax: "",
+  moveInDate: "",
+};
+
 function RoommateProfile() {
+  const { isAuthenticated } = useAuth();
+  const [form, setForm] = useState(DEFAULT_FORM);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [saved, setSaved] = useState(false);
+
+  // Load an existing profile for the selected semester so editing
+  // doesn't start from a blank form — this also means the upsert
+  // (see roommateProfiles.model.js) sends the full object back,
+  // not just whatever the user touched this time.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    async function load() {
+      try {
+        setLoading(true);
+        const profile = await roommateProfilesApi.getMine(form.semester, form.semesterYear);
+        setForm({
+          semester: profile.semester,
+          semesterYear: profile.semester_year,
+          bio: profile.bio || "",
+          sleepSchedule: profile.sleep_schedule,
+          cleanlinessLevel: profile.cleanliness_level,
+          noiseTolerance: profile.noise_tolerance,
+          studyHabits: profile.study_habits,
+          socialLevel: profile.social_level,
+          smoking: !!profile.smoking,
+          pets: !!profile.pets,
+          budgetMin: profile.budget_min ?? "",
+          budgetMax: profile.budget_max ?? "",
+          moveInDate: profile.move_in_date ? profile.move_in_date.slice(0, 10) : "",
+        });
+      } catch {
+        // 404 just means no profile yet for this semester — that's fine,
+        // keep the blank defaults.
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
+  function update(field, value) {
+    setForm((f) => ({ ...f, [field]: value }));
+    setSaved(false);
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError(null);
+    setSaving(true);
+    try {
+      await roommateProfilesApi.upsert({
+        ...form,
+        semesterYear: Number(form.semesterYear),
+        cleanlinessLevel: Number(form.cleanlinessLevel),
+        noiseTolerance: Number(form.noiseTolerance),
+        socialLevel: Number(form.socialLevel),
+        budgetMin: form.budgetMin === "" ? undefined : Number(form.budgetMin),
+        budgetMax: form.budgetMax === "" ? undefined : Number(form.budgetMax),
+        moveInDate: form.moveInDate || undefined,
+      });
+      setSaved(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!isAuthenticated) {
     return (
-        <main className="page">
-            <div className="card">
-                <h1>Roommate Profile</h1>
-  
-                <form className="form">
-                    <label>School</label>
-                    <input type="text" placeholder="Example: Georgia State University" />
-  
-                    <label>Campus / Area</label>
-                    <input type="text" placeholder="Example: Atlanta campus" />
-  
-                    <label>Budget</label>
-                    <input type="text" placeholder="Example: $700 - $900" />
-  
-                    <label>Preferred Housing Type</label>
-                    <select>
-                        <option>On-Campus Dorm</option>
-                        <option>Off-Campus Apartment</option>
-                        <option>Either</option>
-                    </select>
-  
-                    <label>Sleep Schedule</label>
-                    <select>
-                        <option>Early bird</option>
-                        <option>Night owl</option>
-                        <option>Flexible</option>
-                    </select>
-
-                    <label>Cleanliness Level</label>
-                    <select>
-                        <option>Very clean</option>
-                        <option>Average</option>
-                        <option>Relaxed</option>
-                    </select>
-
-                    <label>Noise Level</label>
-                    <select>
-                        <option>Quiet</option>
-                        <option>Moderate</option>
-                        <option>Loud</option>
-                    </select>
-
-                    <label>Lifestyle Tags</label>
-                    <input type="text" placeholder="Example: quiet, clean, study focused" />
-
-                    <label>About Me</label>
-                    <textarea placeholder="Tell potential roommates about yourself"></textarea>
-
-                    <button type="submit">Save Profile</button>
-                </form>
-            </div>
-        </main>
+      <main className="page">
+        <div className="card">
+          <p>You need to be logged in to create a roommate profile.</p>
+        </div>
+      </main>
     );
+  }
+
+  if (loading) return <main className="page"><p>Loading...</p></main>;
+
+  return (
+    <main className="page">
+      <div className="card">
+        <h1>Roommate Profile</h1>
+
+        {error && <p style={{ color: "crimson" }}>{error}</p>}
+        {saved && <p style={{ color: "green" }}>Profile saved.</p>}
+
+        <form className="form" onSubmit={handleSubmit}>
+          <label>Semester</label>
+          <select value={form.semester} onChange={(e) => update("semester", e.target.value)}>
+            <option>Fall</option>
+            <option>Spring</option>
+            <option>Summer</option>
+          </select>
+
+          <label>Year</label>
+          <input
+            type="number"
+            value={form.semesterYear}
+            onChange={(e) => update("semesterYear", e.target.value)}
+          />
+
+          <label>Budget (min - max)</label>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <input
+              type="number"
+              placeholder="Min"
+              value={form.budgetMin}
+              onChange={(e) => update("budgetMin", e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder="Max"
+              value={form.budgetMax}
+              onChange={(e) => update("budgetMax", e.target.value)}
+            />
+          </div>
+
+          <label>Move-in Date</label>
+          <input
+            type="date"
+            value={form.moveInDate}
+            onChange={(e) => update("moveInDate", e.target.value)}
+          />
+
+          <label>Sleep Schedule</label>
+          <select value={form.sleepSchedule} onChange={(e) => update("sleepSchedule", e.target.value)}>
+            <option value="early_bird">Early bird</option>
+            <option value="night_owl">Night owl</option>
+            <option value="flexible">Flexible</option>
+          </select>
+
+          <label>Cleanliness Level (1 = relaxed, 5 = very clean)</label>
+          <select value={form.cleanlinessLevel} onChange={(e) => update("cleanlinessLevel", e.target.value)}>
+            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+
+          <label>Noise Tolerance (1 = need quiet, 5 = doesn't bother me)</label>
+          <select value={form.noiseTolerance} onChange={(e) => update("noiseTolerance", e.target.value)}>
+            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+
+          <label>Study Habits</label>
+          <select value={form.studyHabits} onChange={(e) => update("studyHabits", e.target.value)}>
+            <option value="in_room">Study in room</option>
+            <option value="library">Study at library</option>
+            <option value="flexible">Flexible</option>
+          </select>
+
+          <label>Social Level (1 = introvert, 5 = extrovert)</label>
+          <select value={form.socialLevel} onChange={(e) => update("socialLevel", e.target.value)}>
+            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+
+          <label>
+            <input
+              type="checkbox"
+              checked={form.smoking}
+              onChange={(e) => update("smoking", e.target.checked)}
+            />{" "}
+            I smoke
+          </label>
+
+          <label>
+            <input
+              type="checkbox"
+              checked={form.pets}
+              onChange={(e) => update("pets", e.target.checked)}
+            />{" "}
+            I have pets
+          </label>
+
+          <label>About Me</label>
+          <textarea
+            placeholder="Tell potential roommates about yourself"
+            value={form.bio}
+            onChange={(e) => update("bio", e.target.value)}
+          />
+
+          <button type="submit" disabled={saving}>
+            {saving ? "Saving..." : "Save Profile"}
+          </button>
+        </form>
+      </div>
+    </main>
+  );
 }
-  
+
 export default RoommateProfile;
