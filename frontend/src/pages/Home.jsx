@@ -1,7 +1,11 @@
+import logo from "../assets/dormscout-logo.png";
+
 function Home() {
     return (
         <main className="page">
             <section className="hero">
+                <img src={logo} alt="DormScout logo" className="hero-logo" />
+                
                 <h1>Find Housing and Roommates with DormScout</h1>
 
                 <p>
@@ -19,6 +23,6 @@ function Home() {
             </section>
         </main>
     );
-  }
+}
   
-  export default Home;
+export default Home;

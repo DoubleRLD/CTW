@@ -16,6 +16,21 @@
   margin: 0;
 }
 
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  background: white;
+  border-radius: 8px;
+  padding: 5px;
+}
+
 .nav-links {
   display: flex;
   gap: 18px;
@@ -40,6 +55,13 @@
   max-width: 850px;
   margin: 80px auto;
   text-align: center;
+}
+
+.hero-logo {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  margin-bottom: 20px;
 }
 
 .hero h1 {

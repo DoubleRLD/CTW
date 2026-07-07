@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
+import logo from "../assets/dormscout-logo.png";
 
 function Navbar() {
     return (
       <nav className="navbar">
-        <h2>DormScout</h2>
+        <div className="nav-brand">
+          <img src={logo} alt="DormScout logo" className="nav-logo" /> 
+          <h2>DormScout</h2>
+        </div>
 
         <div className="nav-links">
             <Link to="/">Home</Link>
@@ -17,6 +21,6 @@ function Navbar() {
         </div>
       </nav>
     );
-  }
-  
-  export default Navbar;
+}
+
+export default Navbar;
