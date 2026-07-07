@@ -138,6 +138,7 @@ CREATE TABLE Roommate_Profile (
     school_id         INT NOT NULL,
     semester          ENUM('Fall','Spring','Summer') NOT NULL,
     semester_year     YEAR NOT NULL,
+    profile_picture   LONGTEXT,
     bio               TEXT,
     -- open response fields used by the AI compatibility analysis
     roommate_pet_peeve TEXT,

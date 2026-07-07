@@ -107,6 +107,19 @@ function RoommateMatches() {
         {matches.map((match) => (
           <div className="card" key={match.match_id}>
             <h2>{match.other_user_name}</h2>
+              {match.other_profile_picture && (
+                  <img
+                      src={match.other_profile_picture}
+                      alt={`${match.other_user_name}'s profile`}
+                      style={{
+                          width: '120px',
+                          height: '120px',
+                          objectFit: 'cover',
+                          borderRadius: '50%',
+                          marginBottom: '12px',
+                      }}
+                      />
+              )}
             <p><strong>Sleep Schedule:</strong> {match.other_sleep_schedule}</p>
             <p><strong>Cleanliness:</strong> {match.other_cleanliness_level}/5</p>
             <p><strong>Noise Tolerance:</strong> {match.other_noise_tolerance}/5</p>

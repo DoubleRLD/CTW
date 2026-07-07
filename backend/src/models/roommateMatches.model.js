@@ -41,6 +41,7 @@ export async function findMatchesForProfile(profileId) {
        CASE WHEN m.profile_id_a = ? THEN m.profile_id_b ELSE m.profile_id_a END AS other_profile_id,
        u.name AS other_user_name,
        rp.bio AS other_bio,
+       rp.profile_picture AS other_profile_picture,
        rp.sleep_schedule AS other_sleep_schedule,
        rp.cleanliness_level AS other_cleanliness_level,
        rp.noise_tolerance AS other_noise_tolerance,

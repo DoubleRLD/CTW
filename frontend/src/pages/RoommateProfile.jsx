@@ -6,10 +6,11 @@ const DEFAULT_FORM = {
   semester: "Fall",
   semesterYear: new Date().getFullYear(),
   bio: "",
-  roommatePetPeeve: " ",
-  conflictStyle: " ",
-  visitorStyle: " ",
-  boundaries: " ",
+  profilePicture: "",
+  roommatePetPeeve: "",
+  conflictStyle: "",
+  visitorStyle: "",
+  boundaries: "",
   sleepSchedule: "flexible",
   cleanlinessLevel: 3,
   noiseTolerance: 3,
@@ -48,6 +49,7 @@ function RoommateProfile() {
           semesterYear: profile.semester_year,
           bio: profile.bio || "",
           roommatePetPeeve: profile.roommate_pet_peeve || "",
+          profilePicture: profile.profile_picture || "",
           conflictStyle: profile.conflict_style || "",
           visitorStyle: profile.visitor_style || "",
           boundaries: profile.boundaries || "",
@@ -76,6 +78,23 @@ function RoommateProfile() {
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
     setSaved(false);
+  }
+
+  function handleProfilePictureChange(e) {
+    const file = e.target.files?.[0];
+
+    if (!file) {
+      update("profilePicture", '');
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      update("profilePicture", reader.result);
+    };
+
+    reader.readAsDataURL(file);
   }
 
   async function handleSubmit(e) {
@@ -237,6 +256,25 @@ function RoommateProfile() {
             I have pets
           </label>
 
+          <label>Profile Picture Upload</label>
+          <input
+              type="file"
+              accept='image/*'
+              onChange={handleProfilePictureChange}
+          />
+          {form.profilePicture && (
+              <img
+                src={form.profilePicture}
+                alt="Profile preview"
+                style = {{
+                  width: "120px",
+                  height: "120px",
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                  marginTop: "8px",
+                }}
+                />
+          )}
           <label>About Me</label>
           <textarea
             placeholder="Tell potential roommates about yourself"

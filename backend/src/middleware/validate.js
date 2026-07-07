@@ -63,6 +63,7 @@ export const roommateProfileSchema = z
     semester: semesterEnum,
     semesterYear: z.number().int().min(2000).max(2100),
     bio: z.string().max(2000).optional(),
+    profilePicture: z.string().url().max(10000000).optional().or(z.literal("")),
     roommatePetPeeve: z.string().max(2000).optional(),
     conflictStyle: z.string().max(2000).optional(),
     visitorStyle: z.string().max(2000).optional(),
