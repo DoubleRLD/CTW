@@ -11,6 +11,8 @@ function RoommateMatches() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [respondingId, setRespondingId] = useState(null);
+  const [analysisByMatch, setAnalysisByMatch] = useState({});
+  const [analyzingId, setAnalyzingId] = useState(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -46,6 +48,23 @@ function RoommateMatches() {
     }
   }
 
+  async function handleAnalysis(matchId) {
+      setAnalyzingId(matchId);
+      setError(null);
+
+      try {
+          const data = await roommateMatchesApi.getAnalysis(matchId);
+          setAnalysisByMatch((prev)=> ({
+              ...prev,
+              [matchId]: data.explanation,
+          }));
+      } catch (err) {
+          console.error("AI analysis failed:", err);
+          setError("AI analysis is temporarily unavailable. Please try again later.");
+      } finally {
+          setAnalyzingId(null);
+      }
+  }
   if (!isAuthenticated) {
     return (
       <main className="page">
@@ -88,6 +107,19 @@ function RoommateMatches() {
         {matches.map((match) => (
           <div className="card" key={match.match_id}>
             <h2>{match.other_user_name}</h2>
+              {match.other_profile_picture && (
+                  <img
+                      src={match.other_profile_picture}
+                      alt={`${match.other_user_name}'s profile`}
+                      style={{
+                          width: '120px',
+                          height: '120px',
+                          objectFit: 'cover',
+                          borderRadius: '50%',
+                          marginBottom: '12px',
+                      }}
+                      />
+              )}
             <p><strong>Sleep Schedule:</strong> {match.other_sleep_schedule}</p>
             <p><strong>Cleanliness:</strong> {match.other_cleanliness_level}/5</p>
             <p><strong>Noise Tolerance:</strong> {match.other_noise_tolerance}/5</p>
@@ -100,6 +132,20 @@ function RoommateMatches() {
             <p>{match.other_bio}</p>
             <p><strong>Compatibility:</strong> {match.compatibility_score}%</p>
             <p><strong>Status:</strong> {match.status}</p>
+
+            <button
+                className="secondary-btn"
+                disabled={analyzingId === match.match_id}
+                onClick={() => handleAnalysis(match.match_id)}
+             >
+                {analyzingId === match.match_id ? "Analyzing..." : "View AI Analysis"}
+            </button>
+            {analysisByMatch[match.match_id] && (
+                <div>
+                    <h3>AI Compatibility Analysis</h3>
+                    <p>{analysisByMatch[match.match_id]}</p>
+                </div>
+              )}
 
             {match.status === "pending" && (
               <div style={{ display: "flex", gap: "8px" }}>

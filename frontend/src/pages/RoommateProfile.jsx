@@ -6,6 +6,11 @@ const DEFAULT_FORM = {
   semester: "Fall",
   semesterYear: new Date().getFullYear(),
   bio: "",
+  profilePicture: "",
+  roommatePetPeeve: "",
+  conflictStyle: "",
+  visitorStyle: "",
+  boundaries: "",
   sleepSchedule: "flexible",
   cleanlinessLevel: 3,
   noiseTolerance: 3,
@@ -43,6 +48,11 @@ function RoommateProfile() {
           semester: profile.semester,
           semesterYear: profile.semester_year,
           bio: profile.bio || "",
+          roommatePetPeeve: profile.roommate_pet_peeve || "",
+          profilePicture: profile.profile_picture || "",
+          conflictStyle: profile.conflict_style || "",
+          visitorStyle: profile.visitor_style || "",
+          boundaries: profile.boundaries || "",
           sleepSchedule: profile.sleep_schedule,
           cleanlinessLevel: profile.cleanliness_level,
           noiseTolerance: profile.noise_tolerance,
@@ -68,6 +78,23 @@ function RoommateProfile() {
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
     setSaved(false);
+  }
+
+  function handleProfilePictureChange(e) {
+    const file = e.target.files?.[0];
+
+    if (!file) {
+      update("profilePicture", '');
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      update("profilePicture", reader.result);
+    };
+
+    reader.readAsDataURL(file);
   }
 
   async function handleSubmit(e) {
@@ -195,6 +222,31 @@ function RoommateProfile() {
             I smoke
           </label>
 
+          <label> What is your biggest roommate pet peeve?</label>
+          <textarea
+            placeholder="Example: Leaving dishes in the sink, being loud at night, not communicating about guests. "
+            value={form.roommatePetPeeve}
+            onChange={(e) => update("roommatePetPeeve", e.target.value)}
+          />
+          <label>What is your conflict resolution style? Are you more confrontational or avoidant?</label>
+          <textarea
+            placeholder="Example: I tend to keep things to myself until I boil over."
+            value={form.conflictStyle}
+            onChange={(e) => update("conflictStyle", e.target.value)}
+          />
+          <label>Do you like to have visitors? How often?</label>
+          <textarea
+            placeholder="Example: I have friends over often. Not a fan of overnight guest. "
+            value={form.visitorStyle}
+            onChange={(e) => update("visitorStyle", e.target.value)}
+          />
+           <label>What are your strict boundaries when sharing a space?</label>
+          <textarea
+            placeholder="Example: I do not share groceries."
+            value={form.boundaries}
+            onChange={(e) => update("boundaries", e.target.value)}
+          />
+
           <label>
             <input
               type="checkbox"
@@ -204,6 +256,25 @@ function RoommateProfile() {
             I have pets
           </label>
 
+          <label>Profile Picture Upload</label>
+          <input
+              type="file"
+              accept='image/*'
+              onChange={handleProfilePictureChange}
+          />
+          {form.profilePicture && (
+              <img
+                src={form.profilePicture}
+                alt="Profile preview"
+                style = {{
+                  width: "120px",
+                  height: "120px",
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                  marginTop: "8px",
+                }}
+                />
+          )}
           <label>About Me</label>
           <textarea
             placeholder="Tell potential roommates about yourself"
