@@ -139,7 +139,11 @@ CREATE TABLE Roommate_Profile (
     semester          ENUM('Fall','Spring','Summer') NOT NULL,
     semester_year     YEAR NOT NULL,
     bio               TEXT,
-
+    -- open response fields used by the AI compatibility analysis
+    roommate_pet_peeve TEXT,
+    conflict_style    TEXT,
+    visitor_style     TEXT,
+    boundaries        TEXT,
     -- structured preference fields the matching algorithm actually compares
     sleep_schedule    ENUM('early_bird','night_owl','flexible') NOT NULL,
     cleanliness_level TINYINT NOT NULL CHECK (cleanliness_level BETWEEN 1 AND 5),

@@ -6,6 +6,10 @@ const DEFAULT_FORM = {
   semester: "Fall",
   semesterYear: new Date().getFullYear(),
   bio: "",
+  roommatePetPeeve: " ",
+  conflictStyle: " ",
+  visitorStyle: " ",
+  boundaries: " ",
   sleepSchedule: "flexible",
   cleanlinessLevel: 3,
   noiseTolerance: 3,
@@ -43,6 +47,10 @@ function RoommateProfile() {
           semester: profile.semester,
           semesterYear: profile.semester_year,
           bio: profile.bio || "",
+          roommatePetPeeve: profile.roommate_pet_peeve || "",
+          conflictStyle: profile.conflict_style || "",
+          visitorStyle: profile.visitor_style || "",
+          boundaries: profile.boundaries || "",
           sleepSchedule: profile.sleep_schedule,
           cleanlinessLevel: profile.cleanliness_level,
           noiseTolerance: profile.noise_tolerance,
@@ -194,6 +202,31 @@ function RoommateProfile() {
             />{" "}
             I smoke
           </label>
+
+          <label> What is your biggest roommate pet peeve?</label>
+          <textarea
+            placeholder="Example: Leaving dishes in the sink, being loud at night, not communicating about guests. "
+            value={form.roommatePetPeeve}
+            onChange={(e) => update("roommatePetPeeve", e.target.value)}
+          />
+          <label>What is your conflict resolution style? Are you more confrontational or avoidant?</label>
+          <textarea
+            placeholder="Example: I tend to keep things to myself until I boil over."
+            value={form.conflictStyle}
+            onChange={(e) => update("conflictStyle", e.target.value)}
+          />
+          <label>Do you like to have visitors? How often?</label>
+          <textarea
+            placeholder="Example: I have friends over often. Not a fan of overnight guest. "
+            value={form.visitorStyle}
+            onChange={(e) => update("visitorStyle", e.target.value)}
+          />
+           <label>What are your strict boundaries when sharing a space?</label>
+          <textarea
+            placeholder="Example: I do not share groceries."
+            value={form.boundaries}
+            onChange={(e) => update("boundaries", e.target.value)}
+          />
 
           <label>
             <input
