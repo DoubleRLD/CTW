@@ -180,3 +180,190 @@ textarea {
 .feature-card h3 {
   margin-top: 0;
 }
+
+.auth-page {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  padding: 0;
+}
+
+.auth-card {
+  width: 100%;
+  min-height: calc(100vh - 80px);
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  background: white;
+  overflow: hidden;
+}
+
+.auth-brand-panel {
+  position: relative;
+  background: linear-gradient(135deg, #1f2937, #2563eb);
+  color: white;
+  padding: 56px 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border-top-right-radius: 360px;
+  border-bottom-right-radius: 360px;
+  overflow: hidden;
+}
+
+.auth-brand-panel::before {
+  content: "";
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  bottom: -180px;
+  left: -140px;
+}
+
+.auth-brand-panel::after {
+  content: "";
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  top: 70px;
+  right: -90px;
+}
+
+.auth-brand-logo {
+  position: relative;
+  z-index: 1;
+  width: 105px;
+  height: 105px;
+  object-fit: contain;
+  background: white;
+  border-radius: 50%;
+  padding: 14px;
+  margin-bottom: 24px;
+}
+
+.auth-brand-panel h2,
+.auth-brand-panel p {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-brand-panel h2 {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.auth-brand-panel p {
+  max-width: 320px;
+  color: #e5e7eb;
+  line-height: 1.6;
+}
+
+.auth-form-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 90px 90px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.auth-form-panel::before {
+  content: "";
+  position: absolute;
+  top: -260px;
+  right: -280px;
+  width: 430px;
+  height: 430px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1f2937, #2563eb);
+  opacity: 0.95;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.auth-form-panel > * {
+  position: relative;
+  z-index: 2;
+}
+
+.auth-form-panel h1 {
+  color: #1f2937;
+  text-align: center;
+  font-size: 42px;
+  margin-bottom: 8px;
+  font-weight: 800;
+  position: relative;
+  z-index: 2;
+}
+
+.form-helper {
+  color: #555;
+  text-align: center;
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+.auth-form-panel .form {
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.auth-form-panel .form input {
+  border-radius: 999px;
+  padding: 15px 20px;
+  background: #eef2ff;
+  border: 1px solid #dbeafe;
+}
+
+.auth-form-panel .form button {
+  border-radius: 999px;
+  margin-top: 12px;
+}
+
+.auth-switch-text {
+  text-align: center;
+  margin-top: 24px;
+  color: #555;
+}
+
+.auth-switch-text a {
+  color: #2563eb;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+@media (max-width: 800px) {
+  .auth-card {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .auth-brand-panel {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 140px;
+    border-bottom-left-radius: 140px;
+    padding: 36px 24px;
+  }
+
+  .auth-form-panel {
+    padding: 48px 24px;
+  }
+
+  .auth-form-panel::before {
+    width: 260px;
+    height: 260px;
+    top: -150px;
+    right: -130px;
+  }
+
+  .auth-form-panel h1 {
+    font-size: 32px;
+  }
+}

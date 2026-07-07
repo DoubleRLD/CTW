@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import logo from "../assets/dormscout-logo.png";
 
 function Register() {
   const { register } = useAuth();
@@ -32,49 +33,70 @@ function Register() {
   }
 
   return (
-    <main className="page">
-      <div className="card">
-        <h1>Create Student Account</h1>
+    <main className="page auth-page">
+      <div className="auth-card">
+        <section className="auth-brand-panel">
+          <img src={logo} alt="DormScout logo" className="auth-brand-logo" />
 
-        {error && <p style={{ color: "crimson" }}>{error}</p>}
+          <h2>Join DormScout</h2>
 
-        <form className="form" onSubmit={handleSubmit}>
-          <label>Full Name</label>
-          <input
-            type="text"
-            placeholder="Enter your full name"
-            value={form.name}
-            onChange={(e) => update("name", e.target.value)}
-            required
-          />
+          <p>
+            Create an account to compare housing, save listings, write reviews, and build your roommate profile.
+          </p>
+        </section>
 
-          <label>Student Email</label>
-          <input
-            type="email"
-            placeholder="Enter your school email"
-            value={form.email}
-            onChange={(e) => update("email", e.target.value)}
-            required
-          />
-          <p className="small-text">
-            Your school is detected from your email domain — make sure it matches
-            your university's registered domain.
+        <section className="auth-form-panel">
+
+          <h1>Create Student Account</h1>
+
+          <p className="form-helper">
+            Sign up with your student email to start using DormScout.
           </p>
 
-          <label>Password</label>
-          <input
-            type="password"
-            placeholder="Create a password (min 8 characters)"
-            value={form.password}
-            onChange={(e) => update("password", e.target.value)}
-            minLength={8}
-            required
-          />
+          {error && <p style={{ color: "crimson" }}>{error}</p>}
 
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Creating account..." : "Sign Up"}
-          </button>
-        </form>
+          <form className="form" onSubmit={handleSubmit}>
+            <label>Full Name</label>
+            <input
+              type="text"
+              placeholder="Enter your full name"
+              value={form.name}
+              onChange={(e) => update("name", e.target.value)}
+              required
+            />
+
+            <label>Student Email</label>
+            <input
+              type="email"
+              placeholder="Enter your school email"
+              value={form.email}
+              onChange={(e) => update("email", e.target.value)}
+              required
+            />
+
+            <p className="small-text">
+              Your school is detected from your email domain — make sure it matches your university's registered domain.
+            </p>
+
+            <label>Password</label>
+            <input
+              type="password"
+              placeholder="Create a password (min 8 characters)"
+              value={form.password}
+              onChange={(e) => update("password", e.target.value)}
+              minLength={8}
+              required
+            />
+
+            <button type="submit" disabled={submitting}>
+              {submitting ? "Creating account..." : "Sign Up"}
+            </button>
+          </form>
+
+          <p className="auth-switch-text">
+            Already have an account? <Link to="/login">Log in</Link>
+          </p>
+        </section>
       </div>
     </main>
   );

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import logo from "../assets/dormscout-logo.png";
 
 function Login() {
   const { login } = useAuth();
@@ -25,35 +26,56 @@ function Login() {
   }
 
   return (
-    <main className="page">
-      <div className="card">
-        <h1>Login</h1>
+    <main className="page auth-page">
+      <div className="auth-card">
+        <section className="auth-brand-panel">
+          <img src={logo} alt="DormScout logo" className="auth-brand-logo" />
+          
+          <h2>Welcome Back!</h2>
+          
+          <p>
+            Log in to continue searching housing, reading reviews, and finding compatible roommates.
+          </p>
+        </section>
 
-        {error && <p style={{ color: "crimson" }}>{error}</p>}
+        <section className="auth-form-panel">
 
-        <form className="form" onSubmit={handleSubmit}>
-          <label>Email</label>
-          <input
-            type="email"
-            placeholder="Enter your student email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <h1>Login</h1>
 
-          <label>Password</label>
-          <input
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <p className="form-helper">
+            Enter your student account information to continue.
+          </p>
 
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Logging in..." : "Login"}
-          </button>
-        </form>
+          {error && <p style={{ color: "crimson" }}>{error}</p>}
+
+          <form className="form" onSubmit={handleSubmit}>
+            <label>Email</label>
+            <input
+              type="email"
+              placeholder="Enter your student email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <label>Password</label>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <button type="submit" disabled={submitting}>
+              {submitting ? "Logging in..." : "Login"}
+            </button>
+          </form>
+
+          <p className="auth-switch-text">
+            Don&apos;t have an account? <Link to="/register">Sign up</Link>
+          </p>
+        </section>
       </div>
     </main>
   );
