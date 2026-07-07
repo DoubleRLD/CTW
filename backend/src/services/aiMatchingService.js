@@ -1,12 +1,15 @@
-const OpenAI = require("openai");
+import { GoogleGenAI } from "@google/genai";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
-async function generateMatchExplanation(userA, userB, score) {
+export async function generateMatchExplanation(userA, userB, score) {
   const prompt = `
-You are helping explain roommate compatibility for a college roommate matching app.
+You are helping explain roommate compatibility for DormScope, a college roommate matching app.
+
+The compatibility score has already been calculated by the app's matching algorithm.
+Do not change or recalculate the score. 
 
 Compatibility score: ${score}/100
 
@@ -16,24 +19,28 @@ ${JSON.stringify(userA, null, 2)}
 Roommate B:
 ${JSON.stringify(userB, null, 2)}
 
-Write a short, friendly explanation with:
+Pay special attention to these open-ended profile fields: 
+ - roommate_pet_peeve
+ - conflict_style
+ - visitor_style
+ - boundaries
+ 
+Write a short, friendly compatibility analysis that includes:
 1. Why they may be compatible
 2. Possible areas of conflict
-3. One practical suggestion
+3. One practical suggestion for living together successfully
 
-Do not mention private or sensitive assumptions.
+Base the analysis only on the profile information provided. 
+Do nor make assumptions about sensitive or private traits. 
+
 Be lighthearted and friendly.
 Keep it under 150 words.
 `;
 
-  const response = await client.responses.create({
-    model: "gpt-4.1-mini",
-    input: prompt,
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
   });
 
-  return response.output_text;
+  return response.text;
 }
-
-module.exports = {
-  generateMatchExplanation,
-};

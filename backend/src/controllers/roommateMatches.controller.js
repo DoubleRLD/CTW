@@ -1,6 +1,7 @@
 import * as ProfilesModel from '../models/roommateProfiles.model.js';
 import * as MatchesModel from '../models/roommateMatches.model.js';
 import { computeCompatibilityScore } from '../services/matchingService.js';
+import { generateMatchExplanation } from "../services/aiMatchingService.js";
 import { asyncHandler, ApiError } from '../middleware/errorHandler.js';
 import { respondToMatchSchema, parseOrThrow } from '../middleware/validate.js';
 
@@ -46,6 +47,31 @@ export const getMyMatches = asyncHandler(async (req, res) => {
 
   const matches = await MatchesModel.findMatchesForProfile(myProfile.room_profile_id);
   res.json(matches);
+});
+// GET/api/roommate-matches/:matchId/analysis (auth required)
+// Uses AI to provide a small summary of one specific roommate match after the base compatibility
+// score is calculated
+export const getMatchAnalysis = asyncHandler(async (req,res) => {
+  const matchId = Number(req.params.matchId);
+
+  const match = await MatchesModel.findMatchById(matchId);
+  if (!match) throw new ApiError(404, 'Match not found.');
+
+  const profileA = await  ProfilesModel.findProfileById(match.profile_id_a);
+  const profileB = await  ProfilesModel.findProfileById(match.profile_id_b);
+
+  const ownsMatch =
+      profileA?.user_id === req.user.userId || profileB?.user_id === req.user.userId;
+  if (!ownsMatch) throw new ApiError(403, "You are not part of this match. ");
+
+  const score = match.compatibility_score ?? match.score ?? 0;
+  const explanation = await generateMatchExplanation(profileA,profileB,score);
+
+  res.json({
+    matchId,
+    score,
+    explanation,
+  });
 });
 
 // POST /api/roommate-matches/:matchId/respond  (auth required)
