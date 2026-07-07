@@ -9,11 +9,14 @@ function Dashboard() {
   if (!isAuthenticated) {
     return (
       <main className="page">
-        <div className="card">
-          <p>
-            You need to be logged in to view your dashboard.{" "}
-            <Link to="/login">Log in</Link> or <Link to="/register">sign up</Link>.
-          </p>
+        <div className="card logged-out-card">
+          <h1>Login Required</h1>
+          <p>You need to be logged in to view your dashboard.</p>
+
+          <div className="button-group left-buttons">
+            <Link to="/login" className="primary-btn">Log In</Link>
+            <Link to="/register" className="secondary-btn">Sign Up</Link>
+          </div>
         </div>
       </main>
     );

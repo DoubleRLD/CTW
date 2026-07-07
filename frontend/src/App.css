@@ -339,6 +339,15 @@ textarea {
   text-decoration: none;
 }
 
+.logged-out-card {
+  max-width: 900px;
+  margin: 40px auto;
+}
+
+.left-buttons {
+  justify-content: flex-start;
+}
+
 @media (max-width: 800px) {
   .auth-card {
     grid-template-columns: 1fr;

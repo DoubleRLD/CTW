@@ -96,8 +96,14 @@ function RoommateProfile() {
   if (!isAuthenticated) {
     return (
       <main className="page">
-        <div className="card">
-          <p>You need to be logged in to create a roommate profile.</p>
+        <div className="card logged-out-card">
+          <h1>Login Required</h1>
+          <p>You need to be logged in to create or update your roommate profile.</p>
+
+          <div className="button-group left-buttons">
+            <a href="/login" className="primary-btn">Log In</a>
+            <a href="/register" className="secondary-btn">Sign Up</a>
+          </div>
         </div>
       </main>
     );

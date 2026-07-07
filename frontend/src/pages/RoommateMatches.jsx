@@ -49,7 +49,15 @@ function RoommateMatches() {
   if (!isAuthenticated) {
     return (
       <main className="page">
-        <p>You need to be logged in to view roommate matches.</p>
+            <div className="card logged-out-card">
+                <h1>Login Required</h1>
+                <p>You need to be logged in to view roommate matches.</p>
+
+                <div className="button-group left-buttons">
+                    <a href="/login" className="primary-btn">Log In</a>
+                    <a href="/register" className="secondary-btn">Sign Up</a>
+                </div>
+            </div>
       </main>
     );
   }
