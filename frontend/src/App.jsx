@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import RoommateMatches from "./pages/RoommateMatches";
 import RoommateProfile from "./pages/RoommateProfile";
+import Favorites from "./pages/Favorites";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/housing" element={<HousingSearch />} />
         <Route path="/housing/:type/:id" element={<HousingDetails />} />
         <Route path="/roommate-profile" element={<RoommateProfile />} />
+        <Route path="/favorites" element={<Favorites />} />
         <Route path="/matches" element={<RoommateMatches />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
