@@ -161,3 +161,22 @@ textarea {
   margin-bottom: 24px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 40px;
+}
+
+.feature-card {
+  background: white;
+  padding: 22px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  text-align: left;
+}
+
+.feature-card h3 {
+  margin-top: 0;
+}
