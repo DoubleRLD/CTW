@@ -56,7 +56,7 @@ function RoommateMatches() {
           const data = await roommateMatchesApi.getAnalysis(matchId);
           setAnalysisByMatch((prev)=> ({
               ...prev,
-              [matchId]: data.explanation,
+              [matchId]: data,
           }));
       } catch (err) {
           console.error("AI analysis failed:", err);
@@ -143,7 +143,21 @@ function RoommateMatches() {
             {analysisByMatch[match.match_id] && (
                 <div>
                     <h3>AI Compatibility Analysis</h3>
-                    <p>{analysisByMatch[match.match_id]}</p>
+                    <p>
+                        <strong>Original Score:</strong>
+                        {analysisByMatch[match.match_id].score}%
+                    </p>
+                    <p>
+                        <strong>AI Adjustment: </strong>{" "}
+                        {analysisByMatch[match.match_id].adjustment > 0 ? "+" :""}
+                        {analysisByMatch[match.match_id].adjustment} points
+                    </p>
+                    <p>
+                        <strong>Adjusted Score:</strong>
+                        {analysisByMatch[match.match_id].adjustedScore}%
+                    </p>
+                    <p>{analysisByMatch[match.match_id].explanation}</p>
+
                 </div>
               )}
 
