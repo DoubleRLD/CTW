@@ -6,6 +6,7 @@ const ai = new GoogleGenAI({
 
 export async function generateMatchExplanation(userA, userB, score) {
     const getCompatibilityData = (profile) => ({
+    name: profile.user_name,
     bio: profile.bio,
     roommate_pet_peeve: profile.roommate_pet_peeve,
     conflict_style: profile.conflict_style,
@@ -32,11 +33,9 @@ Do not change or recalculate the score.
 Compatibility score: ${score}/100
 
 Roommate A:
-${JSON.stringify(userA, null, 2)}
 ${JSON.stringify(getCompatibilityData(userA), null, 2)}
 
 Roommate B:
-${JSON.stringify(userB, null, 2)}
 ${JSON.stringify(getCompatibilityData(userB), null, 2)}
 
 Pay special attention to these open-ended profile fields: 
@@ -44,8 +43,30 @@ Pay special attention to these open-ended profile fields:
  - conflict_style
  - visitor_style
  - boundaries
- 
-Write a short, friendly compatibility analysis that includes:
+
+Use the open-ended answers to gently adjust the compatibility score.
+
+The adjustment must be between -10 and +10 points:
+
+- Positive adjustment: the open-ended answers reveal extra compatibility
+
+- Negative adjustment: the open-ended answers reveal possible roommate conflicts
+
+- Zero adjustment: there is not enough information to justify a change
+
+Do not recalculate the original compatibility score.
+Only recommend a small adjustment based on the open-ended answers.
+
+Use the roommates names in the explanation whenever possible.
+Do not refer to them as Roommate A or Roommate B
+
+Return ONLY valid JSON in this exact format:
+{
+  "adjustment": 0,
+  "explanation": "A short, friendly explanation here."
+}
+
+Write a short, friendly compatibility analysis explanation that includes:
 1. Why they may be compatible
 2. Possible areas of conflict
 3. One practical suggestion for living together successfully
@@ -62,5 +83,26 @@ Keep it under 150 words.
     contents: prompt,
   });
 
-  return response.text;
+  const cleanedText = response.text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+  const result = JSON.parse(cleanedText);
+
+  const adjustment = Math.max(
+      -10,
+      Math.min(10, Number(result.adjustment) || 0)
+  );
+
+  const adjustedScore = Math.max(
+      0,
+      Math.min(100, Number(score) + adjustment)
+  );
+
+  return {
+      adjustment,
+      adjustedScore,
+      explanation: result.explanation,
+  };
 }

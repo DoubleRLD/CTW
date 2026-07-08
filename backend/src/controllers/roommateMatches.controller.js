@@ -65,12 +65,14 @@ export const getMatchAnalysis = asyncHandler(async (req,res) => {
   if (!ownsMatch) throw new ApiError(403, "You are not part of this match. ");
 
   const score = match.compatibility_score ?? match.score ?? 0;
-  const explanation = await generateMatchExplanation(profileA,profileB,score);
+  const aiResult = await generateMatchExplanation(profileA,profileB,score);
 
   res.json({
     matchId,
     score,
-    explanation,
+    adjustment: aiResult.adjustment,
+    adjustedScore: aiResult.adjustedScore,
+    explanation: aiResult.explanation,
   });
 });
 
