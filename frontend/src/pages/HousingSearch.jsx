@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { dormsApi } from "../api/dorms";
 import { listingsApi } from "../api/listings";
+import { favoritesApi } from "../api/favorites";
+import { useAuth } from "../context/AuthContext";
 
 // Dorms and Listings are separate tables on the backend (different
 // columns entirely), so we fetch both and normalize them into one
@@ -38,6 +40,10 @@ function HousingSearch() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
+  // Auth is used to decide whether to show the Save button
+  const { isAuthenticated } = useAuth();
+  // Track favorites as a Set of listing IDs for quick lookup
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
 
   useEffect(() => {
     async function load() {
@@ -51,6 +57,16 @@ function HousingSearch() {
           ...dorms.map(normalizeDorm),
           ...listings.map(normalizeListing),
         ]);
+        // Load the user's saved listing IDs when authenticated so the UI
+        // can render the correct Save/Saved state on listing cards.
+        if (isAuthenticated) {
+          try {
+            const favs = await favoritesApi.list();
+            setFavoriteIds(new Set(favs));
+          } catch (e) {
+            // ignore favorites load errors for now
+          }
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -104,9 +120,42 @@ function HousingSearch() {
               <h2>{h.name}</h2>
               <p>{h.subtitle}</p>
               <p><strong>Rating:</strong> {h.rating}</p>
-              <Link to={`/housing/${h.type}/${h.id}`} className="primary-btn">
-                View Reviews
-              </Link>
+              <div className="button-row">
+                <Link to={`/housing/${h.type}/${h.id}`} className="primary-btn">
+                  View Reviews
+                </Link>
+                {h.type === 'listing' && isAuthenticated && (
+                  // Toggle save/remove. UI optimistically updates local Set
+                  // after a successful API response.
+                  <button
+                    className="secondary-btn"
+                    onClick={async () => {
+                      const listingId = h.id;
+                      if (favoriteIds.has(listingId)) {
+                        try {
+                          await favoritesApi.remove(listingId);
+                          setFavoriteIds((s) => {
+                            const n = new Set(s);
+                            n.delete(listingId);
+                            return n;
+                          });
+                        } catch (err) {
+                          alert(err.message);
+                        }
+                      } else {
+                        try {
+                          await favoritesApi.add(listingId);
+                          setFavoriteIds((s) => new Set(s).add(listingId));
+                        } catch (err) {
+                          alert(err.message);
+                        }
+                      }
+                    }}
+                  >
+                    {favoriteIds.has(h.id) ? 'Saved' : 'Save'}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
           {filtered.length === 0 && <p>No housing found.</p>}

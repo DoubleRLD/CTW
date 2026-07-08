@@ -5,6 +5,7 @@ import { listingsApi } from "../api/listings";
 import { dormReviewsApi } from "../api/dormReviews";
 import { listingReviewsApi } from "../api/listingReviews";
 import { useAuth } from "../context/AuthContext";
+import { favoritesApi } from "../api/favorites";
 
 const RATING_FIELDS = {
   dorm: [
@@ -51,6 +52,7 @@ function HousingDetails() {
   const [newRoom, setNewRoom] = useState({ floor: "", roomNumber: "" });
   const [addingRoom, setAddingRoom] = useState(false);
   const [addRoomError, setAddRoomError] = useState(null);
+  const [isFavorited, setIsFavorited] = useState(false);
 
   const placeApi = type === "dorm" ? dormsApi : listingsApi;
   const reviewApi = type === "dorm" ? dormReviewsApi : listingReviewsApi;
@@ -67,6 +69,17 @@ function HousingDetails() {
         setPlace(placeData);
         setReviews(reviewsData);
         setRooms(roomsData);
+        // If we're viewing a listing and the user is logged in, check
+        // whether this listing is in the user's saved favorites so the
+        // details page can show the correct Save/Saved state.
+        if (type === 'listing' && isAuthenticated) {
+          try {
+            const favs = await favoritesApi.list();
+            setIsFavorited(favs.includes(Number(id)));
+          } catch (e) {
+            // ignore
+          }
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -138,6 +151,28 @@ function HousingDetails() {
       <section className="details-header">
         <h1>{title}</h1>
         <p>{subtitle}</p>
+        {type === 'listing' && isAuthenticated && (
+          <div style={{ marginTop: 8 }}>
+            <button
+              className="secondary-btn"
+              onClick={async () => {
+                try {
+                  if (isFavorited) {
+                    await favoritesApi.remove(Number(id));
+                    setIsFavorited(false);
+                  } else {
+                    await favoritesApi.add(Number(id));
+                    setIsFavorited(true);
+                  }
+                } catch (err) {
+                  alert(err.message);
+                }
+              }}
+            >
+              {isFavorited ? 'Saved' : 'Save Listing'}
+            </button>
+          </div>
+        )}
       </section>
 
       <section>

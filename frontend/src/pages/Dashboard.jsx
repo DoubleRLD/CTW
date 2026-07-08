@@ -39,6 +39,12 @@ function Dashboard() {
         </div>
 
         <div className="card">
+          <h2>Saved Listings</h2>
+          <p>View listings you've bookmarked while browsing.</p>
+          <Link to="/favorites" className="primary-btn">View Saved</Link>
+        </div>
+
+        <div className="card">
           <h2>Roommate Profile</h2>
           <p>Update your lifestyle preferences and roommate questionnaire.</p>
           <Link to="/roommate-profile" className="primary-btn">Update Profile</Link>
