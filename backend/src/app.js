@@ -7,6 +7,7 @@ import authRouter from './routes/auth.routes.js';
 import listingsRouter from './routes/listings.routes.js';
 import roommateProfilesRouter from './routes/roommateProfiles.routes.js';
 import roommateMatchesRouter from './routes/roommateMatches.routes.js';
+import favoritesRouter from './routes/favorites.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimit.js';
 
@@ -30,6 +31,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/listings', listingsRouter);
 app.use('/api/roommate-profiles', roommateProfilesRouter);
 app.use('/api/roommate-matches', roommateMatchesRouter);
+// Favorites API (bookmarks) — routes added for the "Save favorite listings" feature
+app.use('/api/favorites', favoritesRouter);
 
 // Catch-all for unmatched routes
 app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
