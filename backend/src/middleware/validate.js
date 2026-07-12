@@ -22,6 +22,14 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1),
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.string().email(),
+});
+
 export const createListingSchema = z.object({
   landlordId: z.number().int().positive().optional(),
   address: z.string().min(1).max(255),
