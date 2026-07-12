@@ -43,10 +43,6 @@
   font-weight: bold;
 }
 
-.nav-links a:hover {
-  text-decoration: underline;
-}
-
 .page {
   padding: 40px;
 }
@@ -99,6 +95,7 @@ button {
   cursor: pointer;
   font-weight: bold;
   text-align: center;
+  font-family: inherit;
 }
 
 .primary-btn,
@@ -141,6 +138,7 @@ textarea {
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 15px;
+  font-family: inherit;
 }
 
 textarea {
@@ -376,3 +374,142 @@ textarea {
     font-size: 32px;
   }
 }
+
+/* =========================================================
+   Quick-win polish: fonts already handled in index.css/index.html.
+   Everything below is new: star ratings, toasts, skeleton loaders,
+   score badges, active nav links, and richer empty states.
+   ========================================================= */
+
+/* ---------- Active nav link ---------- */
+.nav-links a {
+  opacity: 0.85;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.nav-links a:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.nav-links a.active-link {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.16);
+  text-decoration: none;
+}
+
+/* ---------- Star ratings ---------- */
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 15px;
+}
+
+.star {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.star-filled {
+  color: #f5b400;
+}
+
+.star-empty {
+  color: #dcdcdc;
+}
+
+.star-rating-number {
+  margin-left: 6px;
+  font-weight: 600;
+  color: #444;
+  font-size: 14px;
+}
+
+.star-rating-empty {
+  color: #888;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* ---------- Toasts ---------- */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.toast {
+  padding: 14px 18px;
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  max-width: 320px;
+  animation: toast-in 0.2s ease;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.toast-error {
+  background: #dc2626;
+}
+
+.toast-success {
+  background: #16a34a;
+}
+
+.toast-info {
+  background: #1f2937;
+}
+
+/* ---------- Skeleton loaders ---------- */
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-line {
+  background: linear-gradient(90deg, #eceef2 25%, #f6f7f9 37%, #eceef2 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  height: 14px;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 70%;
+}
+
+.skeleton-text {
+  width: 90%;
+}
+
+.skeleton-button {
+  height: 38px;
+  width: 130px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ---------- Compatibility score badge ---------- */
+.score-badge {
+  display: inline-block;
+  padding: 6px 14px;
