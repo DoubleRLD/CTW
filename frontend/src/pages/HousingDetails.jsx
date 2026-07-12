@@ -5,7 +5,10 @@ import { listingsApi } from "../api/listings";
 import { dormReviewsApi } from "../api/dormReviews";
 import { listingReviewsApi } from "../api/listingReviews";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import { favoritesApi } from "../api/favorites";
+import StarRating from "../components/StarRating";
+import SkeletonCards from "../components/SkeletonCards";
 
 const RATING_FIELDS = {
   dorm: [
@@ -29,6 +32,7 @@ function emptyRatings(type) {
 function HousingDetails() {
   const { type, id } = useParams(); // "dorm" | "listing"
   const { isAuthenticated } = useAuth();
+  const { showToast } = useToast();
 
   const [place, setPlace] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -69,9 +73,6 @@ function HousingDetails() {
         setPlace(placeData);
         setReviews(reviewsData);
         setRooms(roomsData);
-        // If we're viewing a listing and the user is logged in, check
-        // whether this listing is in the user's saved favorites so the
-        // details page can show the correct Save/Saved state.
         if (type === 'listing' && isAuthenticated) {
           try {
             const favs = await favoritesApi.list();
@@ -104,9 +105,10 @@ function HousingDetails() {
         roomNumber: newRoom.roomNumber,
       });
       setRooms((prev) => [...prev, room]);
-      setForm((f) => ({ ...f, roomId: String(room.room_id) })); // auto-select the room just added
+      setForm((f) => ({ ...f, roomId: String(room.room_id) }));
       setShowAddRoom(false);
       setNewRoom({ floor: "", roomNumber: "" });
+      showToast("Room added.", "success");
     } catch (err) {
       setAddRoomError(err.message);
     } finally {
@@ -129,6 +131,7 @@ function HousingDetails() {
       const newReview = await reviewApi.create(id, payload);
       setReviews((prev) => [newReview, ...prev]);
       setForm((f) => ({ ...f, body: "", ratings: emptyRatings(type) }));
+      showToast("Review submitted. Thanks for helping other students!", "success");
     } catch (err) {
       setSubmitError(err.message);
     } finally {
@@ -136,39 +139,50 @@ function HousingDetails() {
     }
   }
 
-  if (loading) return <main className="page"><p>Loading...</p></main>;
+  async function toggleFavorite() {
+    try {
+      if (isFavorited) {
+        await favoritesApi.remove(Number(id));
+        setIsFavorited(false);
+        showToast("Removed from saved listings.", "info");
+      } else {
+        await favoritesApi.add(Number(id));
+        setIsFavorited(true);
+        showToast("Saved to your favorites.", "success");
+      }
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  }
+
+  if (loading) {
+    return (
+      <main className="page">
+        <div className="skeleton-line skeleton-title" style={{ height: "36px", width: "40%" }} />
+        <div className="skeleton-line skeleton-text" style={{ width: "25%" }} />
+        <SkeletonCards count={3} />
+      </main>
+    );
+  }
   if (error) return <main className="page"><p style={{ color: "crimson" }}>Error: {error}</p></main>;
   if (!place) return null;
 
   const title = type === "dorm" ? place.name : place.address;
-  const subtitle =
+  const schoolLabel = type === "dorm" ? place.school_name : (place.school_names || "No linked school yet");
+  const secondaryLabel =
     type === "dorm"
-      ? `${place.school_name} · On-Campus Dorm · Rating: ${place.avg_rating ?? "No ratings yet"}`
-      : `${place.school_names || "No linked school yet"} · Off-Campus · ${place.bedrooms} bed · $${place.monthly_rent}/mo · Rating: ${place.avg_rating ?? "No ratings yet"}`;
+      ? "On-Campus Dorm"
+      : `Off-Campus · ${place.bedrooms} bed · $${place.monthly_rent}/mo`;
 
   return (
     <main className="page">
       <section className="details-header">
         <h1>{title}</h1>
-        <p>{subtitle}</p>
+        <p>{schoolLabel} · {secondaryLabel}</p>
+        <StarRating rating={place.avg_rating != null ? Number(place.avg_rating) : null} />
         {type === 'listing' && isAuthenticated && (
           <div style={{ marginTop: 8 }}>
-            <button
-              className="secondary-btn"
-              onClick={async () => {
-                try {
-                  if (isFavorited) {
-                    await favoritesApi.remove(Number(id));
-                    setIsFavorited(false);
-                  } else {
-                    await favoritesApi.add(Number(id));
-                    setIsFavorited(true);
-                  }
-                } catch (err) {
-                  alert(err.message);
-                }
-              }}
-            >
+            <button className="secondary-btn" onClick={toggleFavorite}>
               {isFavorited ? 'Saved' : 'Save Listing'}
             </button>
           </div>
@@ -178,18 +192,22 @@ function HousingDetails() {
       <section>
         <h2>Student Reviews</h2>
 
-        {reviews.length === 0 && <p>No reviews yet — be the first to leave one.</p>}
+        {reviews.length === 0 && (
+          <div className="empty-state">
+            <div className="empty-state-icon">📝</div>
+            <h3>No reviews yet</h3>
+            <p>Be the first to share your experience.</p>
+          </div>
+        )}
 
         <div className="card-grid">
           {reviews.map((review) => (
             <div className="card" key={review.dorm_review_id ?? review.listing_review_id}>
               <h3>{review.reviewer_name}</h3>
-              {/* room_number comes back from the backend join — "General" means
-                  the reviewer didn't specify a room when submitting. */}
               {type === "dorm" && review.room_number && (
                 <p className="small-text">Room {review.room_number}</p>
               )}
-              <p><strong>Overall:</strong> {review.overall_rating}/5</p>
+              <StarRating rating={review.overall_rating} />
               <p><strong>{review.semester} {review.semester_year}</strong></p>
               <p>{review.body}</p>
             </div>
