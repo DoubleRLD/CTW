@@ -1,37 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { dormsApi } from "../api/dorms";
 import { listingsApi } from "../api/listings";
 import { favoritesApi } from "../api/favorites";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import StarRating from "../components/StarRating";
+import SkeletonCards from "../components/SkeletonCards";
 
 // Dorms and Listings are separate tables on the backend (different
 // columns entirely), so we fetch both and normalize them into one
 // shape the UI can render identically. school comes from a backend
 // join (Dorms.school_name / Listings.school_names) rather than being
-// looked up client-side.
+// looked up client-side. rawRating stays numeric (or null) so the
+// rating filter can compare it, separate from the display string.
 function normalizeDorm(d) {
   return {
     id: d.dorm_id,
     type: "dorm",
     name: d.name,
     school: d.school_name,
-    subtitle: `${d.school_name} · On-Campus Dorm`,
-    rating: d.avg_rating ?? "No ratings yet",
+    subtitle: "On-Campus Dorm",
+    rawRating: d.avg_rating != null ? Number(d.avg_rating) : null,
   };
 }
 
 function normalizeListing(l) {
-  // A listing can be linked to more than one nearby school —
-  // school_names is already a comma-separated string from the backend.
   const schoolLabel = l.school_names || "No linked school yet";
   return {
     id: l.listing_id,
     type: "listing",
     name: l.address,
     school: schoolLabel,
-    subtitle: `${schoolLabel} · Off-Campus · ${l.bedrooms} bed · $${l.monthly_rent}/mo`,
-    rating: l.avg_rating ?? "No ratings yet",
+    subtitle: `Off-Campus · ${l.bedrooms} bed · $${l.monthly_rent}/mo`,
+    rawRating: l.avg_rating != null ? Number(l.avg_rating) : null,
   };
 }
 
@@ -40,9 +42,10 @@ function HousingSearch() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
-  // Auth is used to decide whether to show the Save button
+  const [typeFilter, setTypeFilter] = useState("all"); // all | dorm | listing
+  const [ratingFilter, setRatingFilter] = useState("any"); // any | 4 | 3
   const { isAuthenticated } = useAuth();
-  // Track favorites as a Set of listing IDs for quick lookup
+  const { showToast } = useToast();
   const [favoriteIds, setFavoriteIds] = useState(new Set());
 
   useEffect(() => {
@@ -57,8 +60,6 @@ function HousingSearch() {
           ...dorms.map(normalizeDorm),
           ...listings.map(normalizeListing),
         ]);
-        // Load the user's saved listing IDs when authenticated so the UI
-        // can render the correct Save/Saved state on listing cards.
         if (isAuthenticated) {
           try {
             const favs = await favoritesApi.list();
@@ -76,15 +77,52 @@ function HousingSearch() {
     load();
   }, []);
 
-  // Now genuinely matches on school name too, not just the housing
-  // name — the placeholder text always claimed this but there was no
-  // school data to search against until now.
   const query = search.toLowerCase();
-  const filtered = housing.filter(
-    (h) =>
-      h.name.toLowerCase().includes(query) ||
-      h.school.toLowerCase().includes(query)
-  );
+  const filtered = housing.filter((h) => {
+    const matchesSearch =
+      h.name.toLowerCase().includes(query) || h.school.toLowerCase().includes(query);
+    const matchesType = typeFilter === "all" || h.type === typeFilter;
+    const matchesRating =
+      ratingFilter === "any" ||
+      (h.rawRating != null && h.rawRating >= Number(ratingFilter));
+    return matchesSearch && matchesType && matchesRating;
+  });
+
+  // Groups the filtered results by campus, alphabetically.
+  const grouped = useMemo(() => {
+    const map = new Map();
+    for (const h of filtered) {
+      if (!map.has(h.school)) map.set(h.school, []);
+      map.get(h.school).push(h);
+    }
+    return new Map([...map.entries()].sort((a, b) => a[0].localeCompare(b[0])));
+  }, [filtered]);
+
+  async function toggleFavorite(listingId) {
+    if (favoriteIds.has(listingId)) {
+      try {
+        await favoritesApi.remove(listingId);
+        setFavoriteIds((s) => {
+          const n = new Set(s);
+          n.delete(listingId);
+          return n;
+        });
+        showToast("Removed from saved listings.", "info");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    } else {
+      try {
+        await favoritesApi.add(listingId);
+        setFavoriteIds((s) => new Set(s).add(listingId));
+        showToast("Saved to your favorites.", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    }
+  }
+
+  const hasActiveFilters = search || typeFilter !== "all" || ratingFilter !== "any";
 
   return (
     <main className="page">
@@ -98,69 +136,80 @@ function HousingSearch() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <select>
-          <option>All Housing Types</option>
-          <option>On-Campus Dorm</option>
-          <option>Off-Campus Apartment</option>
+        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+          <option value="all">All Housing Types</option>
+          <option value="dorm">On-Campus Dorm</option>
+          <option value="listing">Off-Campus Apartment</option>
         </select>
-        <select>
-          <option>Any Rating</option>
-          <option>4 stars and up</option>
-          <option>3 stars and up</option>
+        <select value={ratingFilter} onChange={(e) => setRatingFilter(e.target.value)}>
+          <option value="any">Any Rating</option>
+          <option value="4">4 stars and up</option>
+          <option value="3">3 stars and up</option>
         </select>
       </div>
 
-      {loading && <p>Loading housing options...</p>}
+      {loading && <SkeletonCards count={6} />}
       {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
 
-      {!loading && !error && (
-        <div className="card-grid">
-          {filtered.map((h) => (
+      {!loading && !error && grouped.size === 0 && (
+        <div className="empty-state">
+          <div className="empty-state-icon">🏠</div>
+          <h3>No housing found</h3>
+          <p>
+            {hasActiveFilters
+              ? "Try clearing your search or filters to see more results."
+              : "Check back soon — housing hasn't been added for your area yet."}
+          </p>
+        </div>
+      )}
+
+      {!loading && !error && [...grouped.entries()].map(([school, items]) => {
+        // Within a campus, keep on-campus dorms and off-campus
+        // listings visually separate — they're fundamentally
+        // different housing types even though they share a school.
+        const dorms = items.filter((h) => h.type === "dorm");
+        const listings = items.filter((h) => h.type === "listing");
+
+        function renderCard(h) {
+          return (
             <div className="card" key={`${h.type}-${h.id}`}>
-              <h2>{h.name}</h2>
+              <h3>{h.name}</h3>
               <p>{h.subtitle}</p>
-              <p><strong>Rating:</strong> {h.rating}</p>
+              <StarRating rating={h.rawRating} />
               <div className="button-row">
                 <Link to={`/housing/${h.type}/${h.id}`} className="primary-btn">
                   View Reviews
                 </Link>
-                {h.type === 'listing' && isAuthenticated && (
-                  // Toggle save/remove. UI optimistically updates local Set
-                  // after a successful API response.
-                  <button
-                    className="secondary-btn"
-                    onClick={async () => {
-                      const listingId = h.id;
-                      if (favoriteIds.has(listingId)) {
-                        try {
-                          await favoritesApi.remove(listingId);
-                          setFavoriteIds((s) => {
-                            const n = new Set(s);
-                            n.delete(listingId);
-                            return n;
-                          });
-                        } catch (err) {
-                          alert(err.message);
-                        }
-                      } else {
-                        try {
-                          await favoritesApi.add(listingId);
-                          setFavoriteIds((s) => new Set(s).add(listingId));
-                        } catch (err) {
-                          alert(err.message);
-                        }
-                      }
-                    }}
-                  >
-                    {favoriteIds.has(h.id) ? 'Saved' : 'Save'}
+                {h.type === "listing" && isAuthenticated && (
+                  <button className="secondary-btn" onClick={() => toggleFavorite(h.id)}>
+                    {favoriteIds.has(h.id) ? "Saved" : "Save"}
                   </button>
                 )}
               </div>
             </div>
-          ))}
-          {filtered.length === 0 && <p>No housing found.</p>}
-        </div>
-      )}
+          );
+        }
+
+        return (
+          <section key={school} className="campus-section" style={{ marginTop: "36px" }}>
+            <h2>{school}</h2>
+
+            {dorms.length > 0 && (
+              <div className="housing-subsection">
+                <h3 className="housing-subsection-label">On-Campus Dorms</h3>
+                <div className="card-grid">{dorms.map(renderCard)}</div>
+              </div>
+            )}
+
+            {listings.length > 0 && (
+              <div className="housing-subsection">
+                <h3 className="housing-subsection-label">Off-Campus Listings</h3>
+                <div className="card-grid">{listings.map(renderCard)}</div>
+              </div>
+            )}
+          </section>
+        );
+      })}
     </main>
   );
 }
