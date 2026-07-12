@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import RoommateMatches from "./pages/RoommateMatches";
 import RoommateProfile from "./pages/RoommateProfile";
 import Favorites from "./pages/Favorites";
+import VerifyEmail from "./pages/VerifyEmail";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
       </Routes>
     </BrowserRouter>
   );
