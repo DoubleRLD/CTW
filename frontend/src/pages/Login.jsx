@@ -4,16 +4,20 @@ import { useAuth } from "../context/AuthContext";
 import logo from "../assets/dormscout-logo.png";
 
 function Login() {
-  const { login } = useAuth();
+  const { login, resendVerification } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [resendStatus, setResendStatus] = useState(null);
+
+  const needsVerification = error?.toLowerCase().includes("verify your email");
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setResendStatus(null);
     setSubmitting(true);
     try {
       await login(email, password);
@@ -22,6 +26,16 @@ function Login() {
       setError(err.message);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleResend() {
+    setResendStatus("sending");
+    try {
+      const data = await resendVerification(email);
+      setResendStatus(data.devVerificationLink ? data.devVerificationLink : "sent");
+    } catch (err) {
+      setResendStatus("error:" + err.message);
     }
   }
 
@@ -47,6 +61,22 @@ function Login() {
           </p>
 
           {error && <p style={{ color: "crimson" }}>{error}</p>}
+
+          {needsVerification && (
+            <div className="card">
+              <button type="button" onClick={handleResend} disabled={resendStatus === "sending"}>
+                {resendStatus === "sending" ? "Sending..." : "Resend verification email"}
+              </button>
+              {resendStatus === "sent" && (
+                <p className="small-text">Check your email for a new link.</p>
+              )}
+              {resendStatus?.startsWith("http") && (
+                <p className="small-text">
+                  <strong>Dev mode:</strong> <a href={resendStatus}>{resendStatus}</a>
+                </p>
+              )}
+            </div>
+          )}
 
           <form className="form" onSubmit={handleSubmit}>
             <label>Email</label>
