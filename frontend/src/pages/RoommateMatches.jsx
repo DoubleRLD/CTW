@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { roommateMatchesApi } from "../api/roommateMatches";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import ScoreBadge from "../components/ScoreBadge";
+import SkeletonCards from "../components/SkeletonCards";
 
 const CURRENT_SEMESTER = "Fall";
 const CURRENT_YEAR = new Date().getFullYear();
 
 function RoommateMatches() {
   const { isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,8 +45,9 @@ function RoommateMatches() {
     try {
       const updated = await roommateMatchesApi.respond(matchId, status);
       setMatches((prev) => prev.map((m) => (m.match_id === matchId ? { ...m, status: updated.status } : m)));
+      showToast(status === "accepted" ? "Match accepted!" : "Match declined.", "info");
     } catch (err) {
-      setError(err.message);
+      showToast(err.message, "error");
     } finally {
       setRespondingId(null);
     }
@@ -50,7 +55,6 @@ function RoommateMatches() {
 
   async function handleAnalysis(matchId) {
       setAnalyzingId(matchId);
-      setError(null);
 
       try {
           const data = await roommateMatchesApi.getAnalysis(matchId);
@@ -60,7 +64,7 @@ function RoommateMatches() {
           }));
       } catch (err) {
           console.error("AI analysis failed:", err);
-          setError("AI analysis is temporarily unavailable. Please try again later.");
+          showToast("AI analysis is temporarily unavailable. Please try again later.", "error");
       } finally {
           setAnalyzingId(null);
       }
@@ -89,7 +93,7 @@ function RoommateMatches() {
         cleanliness, noise tolerance, study habits, and budget overlap.
       </p>
 
-      {loading && <p>Finding matches...</p>}
+      {loading && <SkeletonCards count={3} />}
       {error && (
         <p style={{ color: "crimson" }}>
           {error}
@@ -100,7 +104,11 @@ function RoommateMatches() {
       )}
 
       {!loading && !error && matches.length === 0 && (
-        <p>No other students have roommate profiles yet this semester — check back soon.</p>
+        <div className="empty-state">
+          <div className="empty-state-icon">🤝</div>
+          <h3>No matches yet</h3>
+          <p>No other students have roommate profiles yet this semester — check back soon.</p>
+        </div>
       )}
 
       <div className="card-grid">
@@ -130,7 +138,9 @@ function RoommateMatches() {
                 : "Not specified"}
             </p>
             <p>{match.other_bio}</p>
-            <p><strong>Compatibility:</strong> {match.compatibility_score}%</p>
+            <div>
+              <ScoreBadge score={match.compatibility_score} />
+            </div>
             <p><strong>Status:</strong> {match.status}</p>
 
             <button
@@ -143,18 +153,13 @@ function RoommateMatches() {
             {analysisByMatch[match.match_id] && (
                 <div>
                     <h3>AI Compatibility Analysis</h3>
-                    <p>
-                        <strong>Original Score:</strong>
-                        {analysisByMatch[match.match_id].score}%
-                    </p>
+                    <div>
+                        <ScoreBadge score={analysisByMatch[match.match_id].adjustedScore} />
+                    </div>
                     <p>
                         <strong>AI Adjustment: </strong>{" "}
                         {analysisByMatch[match.match_id].adjustment > 0 ? "+" :""}
                         {analysisByMatch[match.match_id].adjustment} points
-                    </p>
-                    <p>
-                        <strong>Adjusted Score:</strong>
-                        {analysisByMatch[match.match_id].adjustedScore}%
                     </p>
                     <p>{analysisByMatch[match.match_id].explanation}</p>
 
