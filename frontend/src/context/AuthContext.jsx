@@ -10,9 +10,6 @@ export function AuthProvider({ children }) {
     const saved = localStorage.getItem("user");
     return saved ? JSON.parse(saved) : null;
   });
-  // Starts true whenever a token exists, so protected UI can wait for
-  // validation instead of briefly flashing a "logged out" state on
-  // every page refresh.
   const [checkingAuth, setCheckingAuth] = useState(!!token);
 
   const logout = useCallback(() => {
@@ -22,10 +19,6 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  // On mount, if a token is saved, confirm it's still valid by hitting
-  // /api/auth/me — a token can outlive its actual validity (expired,
-  // or the user was deleted server-side) while still sitting in
-  // localStorage looking legitimate.
   useEffect(() => {
     if (!token) {
       setCheckingAuth(false);
@@ -38,33 +31,61 @@ export function AuthProvider({ children }) {
         localStorage.setItem("user", JSON.stringify(data.user));
       })
       .catch(() => {
-        // Token is invalid/expired — clear it rather than leaving the
-        // app in a state where localStorage and reality disagree.
         logout();
       })
       .finally(() => setCheckingAuth(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Shared by login and verifyEmail — both endpoints return
+  // { token, user } and mean the same thing: "you're now signed in."
+  function establishSession(data) {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    setToken(data.token);
+    setUser(data.user);
+  }
+
   const login = useCallback(async (email, password) => {
     const data = await authApi.login(email, password);
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-    setToken(data.token);
-    setUser(data.user);
+    establishSession(data);
   }, []);
 
+  // Deliberately does NOT establish a session — the backend doesn't
+  // issue a token on register. The account exists but can't log in
+  // until the email link is verified. Returns the raw response so
+  // Register.jsx can show the "check your email" message (and, in dev
+  // mode, the devVerificationLink for testing without real email).
   const register = useCallback(async (payload) => {
-    const data = await authApi.register(payload);
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-    setToken(data.token);
-    setUser(data.user);
+    return authApi.register(payload);
+  }, []);
+
+  // Verifying an email logs the user in immediately — smoother than
+  // sending them back to a manual login screen right after they just
+  // proved ownership of the inbox.
+  const verifyEmail = useCallback(async (token) => {
+    const data = await authApi.verifyEmail(token);
+    establishSession(data);
+    return data;
+  }, []);
+
+  const resendVerification = useCallback(async (email) => {
+    return authApi.resendVerification(email);
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ token, user, login, register, logout, isAuthenticated: !!token, checkingAuth }}
+      value={{
+        token,
+        user,
+        login,
+        register,
+        verifyEmail,
+        resendVerification,
+        logout,
+        isAuthenticated: !!token,
+        checkingAuth,
+      }}
     >
       {children}
     </AuthContext.Provider>
