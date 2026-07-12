@@ -7,10 +7,15 @@ import { pool } from '../config/db.js';
 // separate query per listing.
 export async function findAllListings({ schoolId }) {
   let sql = `
-    SELECT l.*, GROUP_CONCAT(DISTINCT s.name ORDER BY s.name SEPARATOR ', ') AS school_names
+    SELECT
+      l.*,
+      GROUP_CONCAT(DISTINCT s.name ORDER BY s.name SEPARATOR ', ') AS school_names,
+      ROUND(AVG(lr.overall_rating), 2) AS avg_rating,
+      COUNT(DISTINCT lr.listing_review_id) AS review_count
     FROM Listings l
     LEFT JOIN Listing_School ls ON ls.listing_id = l.listing_id
     LEFT JOIN Schools s ON s.school_id = ls.school_id
+    LEFT JOIN Listing_Review lr ON lr.listing_id = l.listing_id
   `;
   const params = [];
 
