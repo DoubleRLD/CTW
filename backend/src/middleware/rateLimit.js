@@ -35,6 +35,17 @@ export const registerLimiter = rateLimit({
   handler: rateLimitHandler,
 });
 
+// Resend-verification lets a caller trigger an email to any address
+// they type in — without a limiter, that's a way to spam someone
+// else's inbox repeatedly.
+export const resendVerificationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitHandler,
+});
+
 // General rate limit applied to all /api routes as defense in depth —
 // auth has its own tighter limiters above, this just stops any single
 // endpoint from being hammered in a loop (e.g. spamming POST /reviews)
