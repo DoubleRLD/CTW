@@ -33,24 +33,28 @@ function Dashboard() {
 
       <div className="card-grid">
         <div className="card">
+          <span className="card-icon">🏠</span>
           <h2>Housing Search</h2>
           <p>Search for dorms and off-campus apartments near your school.</p>
           <Link to="/housing" className="primary-btn">Search Housing</Link>
         </div>
 
         <div className="card">
+          <span className="card-icon">🔖</span>
           <h2>Saved Listings</h2>
           <p>View listings you've bookmarked while browsing.</p>
           <Link to="/favorites" className="primary-btn">View Saved</Link>
         </div>
 
         <div className="card">
+          <span className="card-icon">📝</span>
           <h2>Roommate Profile</h2>
           <p>Update your lifestyle preferences and roommate questionnaire.</p>
           <Link to="/roommate-profile" className="primary-btn">Update Profile</Link>
         </div>
 
         <div className="card">
+          <span className="card-icon">🤝</span>
           <h2>Roommate Matches</h2>
           <p>View compatible roommate matches.</p>
           <Link to="/matches" className="primary-btn">View Matches</Link>
