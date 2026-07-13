@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import StarRating from "../components/StarRating";
 import SkeletonCards from "../components/SkeletonCards";
+import PhotoPlaceholder from "../components/PhotoPlaceholder";
 
 // Dorms and Listings are separate tables on the backend (different
 // columns entirely), so we fetch both and normalize them into one
@@ -30,9 +31,9 @@ function normalizeListing(l) {
   return {
     id: l.listing_id,
     type: "listing",
-    name: l.address,
+    name: l.name || l.address, // fall back to address if no building name (e.g. a private landlord's single house)
     school: schoolLabel,
-    subtitle: `Off-Campus · ${l.bedrooms} bed · $${l.monthly_rent}/mo`,
+    subtitle: `${l.address} · Off-Campus · ${l.bedrooms} bed · $${l.monthly_rent}/mo`,
     rawRating: l.avg_rating != null ? Number(l.avg_rating) : null,
   };
 }
@@ -173,6 +174,7 @@ function HousingSearch() {
         function renderCard(h) {
           return (
             <div className="card" key={`${h.type}-${h.id}`}>
+              <PhotoPlaceholder size="card" />
               <h3>{h.name}</h3>
               <p>{h.subtitle}</p>
               <StarRating rating={h.rawRating} />
