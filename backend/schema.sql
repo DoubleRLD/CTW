@@ -94,6 +94,7 @@ CREATE TABLE Landlords (
 CREATE TABLE Listings (
     listing_id     INT AUTO_INCREMENT PRIMARY KEY,
     landlord_id    INT,                          -- nullable: listing may be added by students before landlord info is known
+    name           VARCHAR(255),                 -- nullable: named apartment complexes have one (e.g. "The Mix"), a random single-owner rental may not
     address        VARCHAR(255) NOT NULL,
     latitude       DECIMAL(9,6),                 -- for map display / distance-from-campus sorting
     longitude      DECIMAL(9,6),
