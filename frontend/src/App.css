@@ -513,3 +513,227 @@ textarea {
 .score-badge {
   display: inline-block;
   padding: 6px 14px;
+}
+
+/* =========================================================
+   Layout polish pass: photo placeholders, card hover effects,
+   richer details header, and general spacing/rhythm improvements.
+   ========================================================= */
+
+/* ---------- Photo placeholders (reserve space for real photos later) ---------- */
+.photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: repeating-linear-gradient(
+    45deg,
+    #f1f3f6,
+    #f1f3f6 10px,
+    #e9ecf1 10px,
+    #e9ecf1 20px
+  );
+  border: 1px dashed #c9cfd8;
+  border-radius: 10px;
+  color: #9aa1ad;
+  margin-bottom: 14px;
+}
+
+.photo-placeholder-card {
+  aspect-ratio: 16 / 10;
+  width: 100%;
+}
+
+.photo-placeholder-hero {
+  aspect-ratio: 21 / 9;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.photo-placeholder-icon {
+  font-size: 28px;
+  opacity: 0.6;
+}
+
+.photo-placeholder-text {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Card hover polish ---------- */
+.card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.card-grid .card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.card h2,
+.card h3 {
+  margin-top: 0;
+}
+
+/* ---------- Details header polish ---------- */
+.details-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.details-header h1 {
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+
+/* ---------- Feature cards (home page) hover polish ---------- */
+.feature-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ---------- General spacing rhythm ---------- */
+.page > h1 {
+  margin-bottom: 6px;
+}
+
+.page > p {
+  margin-top: 0;
+  color: #666;
+}
+
+.card-grid {
+  margin-top: 24px;
+}
+
+/* ---------- Dashboard card icons ---------- */
+.card-icon {
+  display: block;
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+/* =========================================================
+   Home page hero — ties into the same gradient/circle language
+   as .auth-brand-panel on Login/Register, so the whole app feels
+   like one product instead of two different visual styles.
+   ========================================================= */
+
+.home-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1f2937, #2563eb);
+  color: white;
+  text-align: center;
+  padding: 90px 40px 130px;
+  /* cancel out .page's 40px padding so the banner goes edge-to-edge */
+  margin: -40px -40px 0 -40px;
+  border-radius: 0 0 48px 48px;
+}
+
+.home-hero::before {
+  content: "";
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  bottom: -220px;
+  left: -140px;
+}
+
+.home-hero::after {
+  content: "";
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  top: -80px;
+  right: -100px;
+}
+
+.home-hero-logo {
+  position: relative;
+  z-index: 1;
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  background: white;
+  border-radius: 50%;
+  padding: 14px;
+  margin-bottom: 24px;
+}
+
+.home-hero h1,
+.home-hero p,
+.home-hero .button-group {
+  position: relative;
+  z-index: 1;
+}
+
+.home-hero h1 {
+  font-size: 46px;
+  max-width: 780px;
+  margin: 0 auto 18px;
+}
+
+.home-hero p {
+  font-size: 18px;
+  max-width: 640px;
+  margin: 0 auto;
+  color: #e5e7eb;
+  line-height: 1.6;
+}
+
+.home-hero-credit {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* Buttons need inverted styling on the dark gradient — a solid
+   white primary button reads much better than the app's default
+   blue-on-white here. */
+.home-hero .primary-btn {
+  background: white;
+  color: #2563eb;
+}
+
+.home-hero .secondary-btn {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.home-hero .secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Feature cards overlap the hero's rounded bottom edge — a common
+   "cards floating over the banner" pattern that ties the two
+   sections together instead of just stacking them. */
+.home-feature-grid {
+  position: relative;
+  z-index: 2;
+  margin-top: -70px;
+}
+
+@media (max-width: 800px) {
+  .home-hero {
+    padding: 56px 24px 90px;
+    border-radius: 0 0 32px 32px;
+  }
+
+  .home-hero h1 {
+    font-size: 32px;
+  }
+
+  .home-feature-grid {
+    margin-top: -50px;
+  }
+}
