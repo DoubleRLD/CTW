@@ -61,6 +61,7 @@ export async function findListingWithStats(listingId) {
 
 export async function createListing({
   landlordId,
+  name,
   address,
   latitude,
   longitude,
@@ -76,9 +77,9 @@ export async function createListing({
 
     const [result] = await conn.query(
       `INSERT INTO Listings
-         (landlord_id, address, latitude, longitude, monthly_rent, bedrooms, bathrooms, listing_type)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [landlordId ?? null, address, latitude ?? null, longitude ?? null, monthlyRent, bedrooms, bathrooms, listingType]
+         (landlord_id, name, address, latitude, longitude, monthly_rent, bedrooms, bathrooms, listing_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [landlordId ?? null, name ?? null, address, latitude ?? null, longitude ?? null, monthlyRent, bedrooms, bathrooms, listingType]
     );
     const listingId = result.insertId;
 
