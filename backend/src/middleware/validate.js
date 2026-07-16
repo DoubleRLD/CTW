@@ -32,6 +32,7 @@ export const resendVerificationSchema = z.object({
 
 export const createListingSchema = z.object({
   landlordId: z.number().int().positive().optional(),
+  name: z.string().max(255).optional(),
   address: z.string().min(1).max(255),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
