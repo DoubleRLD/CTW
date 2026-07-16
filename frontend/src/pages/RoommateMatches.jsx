@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import ScoreBadge from "../components/ScoreBadge";
 import SkeletonCards from "../components/SkeletonCards";
+import PageHeader from "../components/PageHeader";
 
 const CURRENT_SEMESTER = "Fall";
 const CURRENT_YEAR = new Date().getFullYear();
@@ -87,11 +88,11 @@ function RoommateMatches() {
 
   return (
     <main className="page">
-      <h1>Roommate Matches</h1>
-      <p>
-        Matches are computed from your roommate profile — sleep schedule,
-        cleanliness, noise tolerance, study habits, and budget overlap.
-      </p>
+      <PageHeader
+        title="Roommate Matches"
+        subtitle="Matches are computed from your roommate profile — sleep schedule, cleanliness, noise tolerance, study habits, and budget overlap."
+        icon="🤝"
+      />
 
       {loading && <SkeletonCards count={3} />}
       {error && (
