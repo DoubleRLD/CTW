@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { roommateProfilesApi } from "../api/roommateProfiles";
 import { useAuth } from "../context/AuthContext";
+import PageHeader from "../components/PageHeader";
+import RangeSlider from "../components/RangeSlider";
 
 const DEFAULT_FORM = {
   semester: "Fall",
@@ -31,10 +33,6 @@ function RoommateProfile() {
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
 
-  // Load an existing profile for the selected semester so editing
-  // doesn't start from a blank form — this also means the upsert
-  // (see roommateProfiles.model.js) sends the full object back,
-  // not just whatever the user touched this time.
   useEffect(() => {
     if (!isAuthenticated) {
       setLoading(false);
@@ -140,147 +138,222 @@ function RoommateProfile() {
 
   return (
     <main className="page">
-      <div className="card">
-        <h1>Roommate Profile</h1>
+      <PageHeader
+        title="Roommate Profile"
+        subtitle="Tell future roommates about your lifestyle, habits, and preferences."
+        icon="📝"
+      />
 
+      <div className="card">
         {error && <p style={{ color: "crimson" }}>{error}</p>}
         {saved && <p style={{ color: "green" }}>Profile saved.</p>}
 
         <form className="form" onSubmit={handleSubmit}>
-          <label>Semester</label>
-          <select value={form.semester} onChange={(e) => update("semester", e.target.value)}>
-            <option>Fall</option>
-            <option>Spring</option>
-            <option>Summer</option>
-          </select>
 
-          <label>Year</label>
-          <input
-            type="number"
-            value={form.semesterYear}
-            onChange={(e) => update("semesterYear", e.target.value)}
-          />
+          {/* ---------- The Basics ---------- */}
+          <div className="form-section">
+            <h3 className="form-section-title">The Basics</h3>
+            <p className="form-section-desc">Which semester is this profile for, and your budget.</p>
 
-          <label>Budget (min - max)</label>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <input
-              type="number"
-              placeholder="Min"
-              value={form.budgetMin}
-              onChange={(e) => update("budgetMin", e.target.value)}
-            />
-            <input
-              type="number"
-              placeholder="Max"
-              value={form.budgetMax}
-              onChange={(e) => update("budgetMax", e.target.value)}
-            />
+            <div className="form-row">
+              <div className="form-field">
+                <label>Semester</label>
+                <select value={form.semester} onChange={(e) => update("semester", e.target.value)}>
+                  <option>Fall</option>
+                  <option>Spring</option>
+                  <option>Summer</option>
+                </select>
+              </div>
+              <div className="form-field">
+                <label>Year</label>
+                <input
+                  type="number"
+                  value={form.semesterYear}
+                  onChange={(e) => update("semesterYear", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-field">
+                <label>Budget Min</label>
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={form.budgetMin}
+                  onChange={(e) => update("budgetMin", e.target.value)}
+                />
+              </div>
+              <div className="form-field">
+                <label>Budget Max</label>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={form.budgetMax}
+                  onChange={(e) => update("budgetMax", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="form-field">
+              <label>Move-in Date</label>
+              <input
+                type="date"
+                value={form.moveInDate}
+                onChange={(e) => update("moveInDate", e.target.value)}
+              />
+            </div>
           </div>
 
-          <label>Move-in Date</label>
-          <input
-            type="date"
-            value={form.moveInDate}
-            onChange={(e) => update("moveInDate", e.target.value)}
-          />
+          {/* ---------- Lifestyle ---------- */}
+          <div className="form-section">
+            <h3 className="form-section-title">Lifestyle</h3>
+            <p className="form-section-desc">How you actually live day-to-day — this drives your compatibility score.</p>
 
-          <label>Sleep Schedule</label>
-          <select value={form.sleepSchedule} onChange={(e) => update("sleepSchedule", e.target.value)}>
-            <option value="early_bird">Early bird</option>
-            <option value="night_owl">Night owl</option>
-            <option value="flexible">Flexible</option>
-          </select>
+            <div className="form-row">
+              <div className="form-field">
+                <label>Sleep Schedule</label>
+                <select value={form.sleepSchedule} onChange={(e) => update("sleepSchedule", e.target.value)}>
+                  <option value="early_bird">Early bird</option>
+                  <option value="night_owl">Night owl</option>
+                  <option value="flexible">Flexible</option>
+                </select>
+              </div>
+              <div className="form-field">
+                <label>Study Habits</label>
+                <select value={form.studyHabits} onChange={(e) => update("studyHabits", e.target.value)}>
+                  <option value="in_room">Study in room</option>
+                  <option value="library">Study at library</option>
+                  <option value="flexible">Flexible</option>
+                </select>
+              </div>
+            </div>
 
-          <label>Cleanliness Level (1 = relaxed, 5 = very clean)</label>
-          <select value={form.cleanlinessLevel} onChange={(e) => update("cleanlinessLevel", e.target.value)}>
-            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
+            <RangeSlider
+              label="Cleanliness Level"
+              value={form.cleanlinessLevel}
+              onChange={(v) => update("cleanlinessLevel", v)}
+              minLabel="Relaxed"
+              maxLabel="Very clean"
+            />
 
-          <label>Noise Tolerance (1 = need quiet, 5 = doesn't bother me)</label>
-          <select value={form.noiseTolerance} onChange={(e) => update("noiseTolerance", e.target.value)}>
-            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
+            <RangeSlider
+              label="Noise Tolerance"
+              value={form.noiseTolerance}
+              onChange={(v) => update("noiseTolerance", v)}
+              minLabel="Need quiet"
+              maxLabel="Doesn't bother me"
+            />
 
-          <label>Study Habits</label>
-          <select value={form.studyHabits} onChange={(e) => update("studyHabits", e.target.value)}>
-            <option value="in_room">Study in room</option>
-            <option value="library">Study at library</option>
-            <option value="flexible">Flexible</option>
-          </select>
+            <RangeSlider
+              label="Social Level"
+              value={form.socialLevel}
+              onChange={(v) => update("socialLevel", v)}
+              minLabel="Introvert"
+              maxLabel="Extrovert"
+            />
 
-          <label>Social Level (1 = introvert, 5 = extrovert)</label>
-          <select value={form.socialLevel} onChange={(e) => update("socialLevel", e.target.value)}>
-            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
+            <div className="form-row">
+              <div className="toggle-row">
+                <input
+                  id="smoking-toggle"
+                  type="checkbox"
+                  checked={form.smoking}
+                  onChange={(e) => update("smoking", e.target.checked)}
+                />
+                <label htmlFor="smoking-toggle">I smoke</label>
+              </div>
+              <div className="toggle-row">
+                <input
+                  id="pets-toggle"
+                  type="checkbox"
+                  checked={form.pets}
+                  onChange={(e) => update("pets", e.target.checked)}
+                />
+                <label htmlFor="pets-toggle">I have pets</label>
+              </div>
+            </div>
+          </div>
 
-          <label>
-            <input
-              type="checkbox"
-              checked={form.smoking}
-              onChange={(e) => update("smoking", e.target.checked)}
-            />{" "}
-            I smoke
-          </label>
+          {/* ---------- Roommate Preferences ---------- */}
+          <div className="form-section">
+            <h3 className="form-section-title">Roommate Preferences</h3>
+            <p className="form-section-desc">Open-ended answers that help match you on more than just numbers.</p>
 
-          <label> What is your biggest roommate pet peeve?</label>
-          <textarea
-            placeholder="Example: Leaving dishes in the sink, being loud at night, not communicating about guests. "
-            value={form.roommatePetPeeve}
-            onChange={(e) => update("roommatePetPeeve", e.target.value)}
-          />
-          <label>What is your conflict resolution style? Are you more confrontational or avoidant?</label>
-          <textarea
-            placeholder="Example: I tend to keep things to myself until I boil over."
-            value={form.conflictStyle}
-            onChange={(e) => update("conflictStyle", e.target.value)}
-          />
-          <label>Do you like to have visitors? How often?</label>
-          <textarea
-            placeholder="Example: I have friends over often. Not a fan of overnight guest. "
-            value={form.visitorStyle}
-            onChange={(e) => update("visitorStyle", e.target.value)}
-          />
-           <label>What are your strict boundaries when sharing a space?</label>
-          <textarea
-            placeholder="Example: I do not share groceries."
-            value={form.boundaries}
-            onChange={(e) => update("boundaries", e.target.value)}
-          />
+            <div className="form-field">
+              <label>What is your biggest roommate pet peeve?</label>
+              <textarea
+                placeholder="Example: Leaving dishes in the sink, being loud at night, not communicating about guests."
+                value={form.roommatePetPeeve}
+                onChange={(e) => update("roommatePetPeeve", e.target.value)}
+              />
+            </div>
 
-          <label>
-            <input
-              type="checkbox"
-              checked={form.pets}
-              onChange={(e) => update("pets", e.target.checked)}
-            />{" "}
-            I have pets
-          </label>
+            <div className="form-field">
+              <label>What is your conflict resolution style? Are you more confrontational or avoidant?</label>
+              <textarea
+                placeholder="Example: I tend to keep things to myself until I boil over."
+                value={form.conflictStyle}
+                onChange={(e) => update("conflictStyle", e.target.value)}
+              />
+            </div>
 
-          <label>Profile Picture Upload</label>
-          <input
-              type="file"
-              accept='image/*'
-              onChange={handleProfilePictureChange}
-          />
-          {form.profilePicture && (
+            <div className="form-field">
+              <label>Do you like to have visitors? How often?</label>
+              <textarea
+                placeholder="Example: I have friends over often. Not a fan of overnight guests."
+                value={form.visitorStyle}
+                onChange={(e) => update("visitorStyle", e.target.value)}
+              />
+            </div>
+
+            <div className="form-field">
+              <label>What are your strict boundaries when sharing a space?</label>
+              <textarea
+                placeholder="Example: I do not share groceries."
+                value={form.boundaries}
+                onChange={(e) => update("boundaries", e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* ---------- Profile Picture ---------- */}
+          <div className="form-section">
+            <h3 className="form-section-title">Profile Picture</h3>
+
+            <div className="form-field">
+              <label>Upload a photo</label>
+              <input type="file" accept="image/*" onChange={handleProfilePictureChange} />
+            </div>
+
+            {form.profilePicture && (
               <img
                 src={form.profilePicture}
                 alt="Profile preview"
-                style = {{
+                style={{
                   width: "120px",
                   height: "120px",
                   objectFit: "cover",
                   borderRadius: "50%",
                   marginTop: "8px",
                 }}
-                />
-          )}
-          <label>About Me</label>
-          <textarea
-            placeholder="Tell potential roommates about yourself"
-            value={form.bio}
-            onChange={(e) => update("bio", e.target.value)}
-          />
+              />
+            )}
+          </div>
+
+          {/* ---------- About You ---------- */}
+          <div className="form-section">
+            <h3 className="form-section-title">About You</h3>
+
+            <div className="form-field">
+              <label>Bio</label>
+              <textarea
+                placeholder="Tell potential roommates about yourself"
+                value={form.bio}
+                onChange={(e) => update("bio", e.target.value)}
+              />
+            </div>
+          </div>
 
           <button type="submit" disabled={saving}>
             {saving ? "Saving..." : "Save Profile"}
