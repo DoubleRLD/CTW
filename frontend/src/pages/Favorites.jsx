@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import { favoritesApi } from "../api/favorites";
 import { listingsApi } from "../api/listings";
 import { useAuth } from "../context/AuthContext";
+import PageHeader from "../components/PageHeader";
+import PhotoPlaceholder from "../components/PhotoPlaceholder";
+import StarRating from "../components/StarRating";
+import SkeletonCards from "../components/SkeletonCards";
 
 function Favorites() {
   const { isAuthenticated } = useAuth();
@@ -16,7 +20,6 @@ function Favorites() {
       try {
         setLoading(true);
         const favIds = await favoritesApi.list();
-        // fetch details for each saved listing
         const details = await Promise.all(
           favIds.map((id) => listingsApi.get(id).catch(() => null))
         );
@@ -41,21 +44,39 @@ function Favorites() {
 
   return (
     <main className="page">
-      <h1>Saved Listings</h1>
-      {loading && <p>Loading saved listings...</p>}
+      <PageHeader
+        title="Saved Listings"
+        subtitle="Listings you've bookmarked while browsing housing."
+        icon="🔖"
+      />
+
+      {loading && <SkeletonCards count={3} />}
       {error && <p style={{ color: 'crimson' }}>Error: {error}</p>}
 
-      {!loading && listings.length === 0 && <p>No saved listings yet.</p>}
+      {!loading && !error && listings.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-state-icon">🔖</div>
+          <h3>No saved listings yet</h3>
+          <p>Browse housing and tap "Save" on any off-campus listing to bookmark it here.</p>
+        </div>
+      )}
 
-      <div className="card-grid">
-        {listings.map((l) => (
-          <div className="card" key={l.listing_id}>
-            <h2>{l.address}</h2>
-            <p>{l.school_names || 'No linked school yet'} · {l.bedrooms} bed · ${l.monthly_rent}/mo</p>
-            <Link to={`/housing/listing/${l.listing_id}`} className="primary-btn">View</Link>
-          </div>
-        ))}
-      </div>
+      {!loading && !error && listings.length > 0 && (
+        <div className="card-grid">
+          {listings.map((l) => (
+            <div className="card" key={l.listing_id}>
+              <PhotoPlaceholder size="card" />
+              <h3>{l.name || l.address}</h3>
+              {l.name && <p className="small-text">{l.address}</p>}
+              <p>{l.school_names || 'No linked school yet'} · {l.bedrooms} bed · ${l.monthly_rent}/mo</p>
+              <StarRating rating={l.avg_rating != null ? Number(l.avg_rating) : null} />
+              <Link to={`/housing/listing/${l.listing_id}`} className="primary-btn" style={{ marginTop: 12, display: "inline-block" }}>
+                View
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
     </main>
   );
 }
