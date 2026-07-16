@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import PageHeader from "../components/PageHeader";
 
 function Dashboard() {
   const { isAuthenticated, user, checkingAuth } = useAuth();
@@ -24,12 +25,10 @@ function Dashboard() {
 
   return (
     <main className="page">
-      <h1>Welcome back, {user?.name}</h1>
-
-      <p>
-        Manage your housing search, reviews, roommate profile, and roommate
-        matches from one place.
-      </p>
+      <PageHeader
+        title={`Welcome back, ${user?.name}`}
+        subtitle="Manage your housing search, reviews, roommate profile, and roommate matches from one place."
+      />
 
       <div className="card-grid">
         <div className="card">
