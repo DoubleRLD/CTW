@@ -8,6 +8,7 @@ import { useToast } from "../context/ToastContext";
 import StarRating from "../components/StarRating";
 import SkeletonCards from "../components/SkeletonCards";
 import PhotoPlaceholder from "../components/PhotoPlaceholder";
+import PageHeader from "../components/PageHeader";
 
 // Dorms and Listings are separate tables on the backend (different
 // columns entirely), so we fetch both and normalize them into one
@@ -127,9 +128,12 @@ function HousingSearch() {
 
   return (
     <main className="page">
-      <h1>Search Student Housing</h1>
-      <p>Browse dorms and off-campus apartments near your school.</p>
-
+      <PageHeader
+        title="Search Student Housing"
+        subtitle="Browse dorms and off-campus apartments near your school."
+        icon="🏠"
+      />
+      
       <div className="filter-bar">
         <input
           type="text"
