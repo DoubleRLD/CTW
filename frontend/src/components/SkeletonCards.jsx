@@ -1,3 +1,5 @@
+import React from "react";
+
 function SkeletonCards({ count = 3 }) {
   return (
     <div className="card-grid">
