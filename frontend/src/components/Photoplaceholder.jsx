@@ -1,3 +1,5 @@
+import React from "react";
+
 // Reserves the visual space a real photo will occupy later, so
 // adding actual images (upload or URL) won't require any layout
 // rework — just swap this out for an <img>. `size` controls aspect

@@ -1,3 +1,5 @@
+import React from "react";
+
 // Smaller companion to the Home page's full hero — same gradient
 // and brand language, scaled down to sit above a page's actual
 // content (filters, forms, cards) instead of replacing it.

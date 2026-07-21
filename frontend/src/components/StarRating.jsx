@@ -1,3 +1,5 @@
+import React from "react";
+
 function StarRating({ rating, showNumber = true }) {
   if (rating == null || rating === "No ratings yet" || isNaN(Number(rating))) {
     return <span className="star-rating star-rating-empty">No ratings yet</span>;
