@@ -922,3 +922,19 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+.card-photo {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+.details-photo {
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
