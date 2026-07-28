@@ -5,6 +5,8 @@ export const roommateMatchesApi = {
     api.get(`/roommate-matches/me?semester=${semester}&semesterYear=${semesterYear}`, { auth: true }),
   getAnalysis: (matchId)=>
       api.get(`/roommate-matches/${matchId}/analysis`, {auth:true}),
+  sendRequest: (matchId) =>
+    api.post(`/roommate-matches/${matchId}/request`, {}, { auth: true }),
   respond: (matchId, status) =>
     api.post(`/roommate-matches/${matchId}/respond`, { status }, { auth: true }),
 };
