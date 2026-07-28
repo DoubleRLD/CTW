@@ -28,6 +28,9 @@ function Navbar() {
         <NavLink to="/roommate-profile" className={navLinkClass}>Roommate Profile</NavLink>
         <NavLink to="/matches" className={navLinkClass}>Matches</NavLink>
         <NavLink to="/dashboard" className={navLinkClass}>Dashboard</NavLink>
+        {isAuthenticated && user?.is_admin && (
+          <NavLink to="/admin" className={navLinkClass}>🛠️ Admin</NavLink>
+        )}
 
         {checkingAuth ? null : isAuthenticated ? (
           <>
