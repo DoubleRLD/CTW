@@ -68,6 +68,29 @@ function isPendingRequest(match) {
   );
 }
 
+function getStatusBadge(match, user) {
+  const status = getStatus(match);
+  const direction = getRequestDirection(match, user);
+
+  if (isAcceptedMatch(match)) {
+    return { label: "Matched", type: "accepted" };
+  }
+
+  if (isPendingRequest(match)) {
+    if (direction === "incoming") {
+      return { label: "Incoming Request", type: "incoming" };
+    }
+
+    if (direction === "outgoing") {
+      return { label: "Request Sent", type: "sent" };
+    }
+
+    return { label: "Pending", type: "pending" };
+  }
+
+  return { label: status ? status.replace(/_/g, " ") : "Unknown", type: "unknown" };
+}
+
 function getRequestDirection(match, user) {
   const direction =
     match.request_direction || match.direction || match.requestDirection;
@@ -269,6 +292,7 @@ function RoommateMatches() {
           {visibleMatches.map((match) => {
             const traits = getTraitTags(match);
             const compatibility = getCompatibility(match.compatibility_score);
+            const statusBadge = getStatusBadge(match, user);
 
             return (
               <div className="roommate-match-card" key={match.match_id}>
@@ -284,7 +308,12 @@ function RoommateMatches() {
                 </div>
 
                 <div className="roommate-match-info">
-                  <h2>{match.other_user_name}</h2>
+                  <div className="roommate-card-header">
+                    <h2>{match.other_user_name}</h2>
+                    <span className={`roommate-status-badge ${statusBadge.type}`}>
+                      {statusBadge.label}
+                    </span>
+                  </div>
 
                   <p className="roommate-meta">
                     🏫{" "}
