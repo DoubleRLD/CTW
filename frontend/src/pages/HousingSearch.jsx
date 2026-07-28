@@ -211,6 +211,15 @@ function HousingSearch() {
         )}
 
         <div className="housing-search-info">
+          <div className="housing-card-badges">
+            <span className={`housing-card-badge ${h.type}`}>
+              {h.type === "dorm" ? "On-Campus" : "Off-Campus"}
+            </span>
+            {h.type === "listing" && favoriteIds.has(h.id) && (
+              <span className="housing-card-badge saved">Saved</span>
+            )}
+          </div>
+
           <h2>{h.name}</h2>
 
           <p className="blue-text">{h.subtitle}</p>

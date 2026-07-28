@@ -1271,6 +1271,37 @@ textarea {
   margin-bottom: 8px;
 }
 
+.housing-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.housing-card-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.housing-card-badge.dorm {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.housing-card-badge.listing {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.housing-card-badge.saved {
+  background: #dcfce7;
+  color: #166534;
+}
+
 .blue-text {
   color: #2563eb;
   font-weight: 800;
@@ -1789,6 +1820,48 @@ textarea {
   font-size: 26px;
   color: #111827;
   margin-bottom: 8px;
+}
+
+.roommate-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.roommate-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.roommate-status-badge.accepted {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.roommate-status-badge.incoming {
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+
+.roommate-status-badge.sent {
+  background: #fef9c3;
+  color: #92400e;
+}
+
+.roommate-status-badge.pending {
+  background: #f3f4f6;
+  color: #334155;
+}
+
+.roommate-status-badge.unknown {
+  background: #f8fafc;
+  color: #475569;
 }
 
 .roommate-meta {
