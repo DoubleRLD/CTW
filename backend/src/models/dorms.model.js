@@ -56,3 +56,34 @@ export async function createDorm({ schoolId, name, address }) {
   );
   return findDormById(result.insertId);
 }
+
+// Admin edit — only updates the fields actually provided, so a
+// partial PATCH (e.g. just fixing a typo'd address) doesn't clobber
+// the rest of the row with undefined.
+export async function updateDorm(dormId, { schoolId, name, address }) {
+  const fields = [];
+  const params = [];
+  if (schoolId !== undefined) { fields.push('school_id = ?'); params.push(schoolId); }
+  if (name !== undefined) { fields.push('name = ?'); params.push(name); }
+  if (address !== undefined) { fields.push('address = ?'); params.push(address); }
+  if (fields.length === 0) return findDormById(dormId);
+
+  params.push(dormId);
+  await pool.query(`UPDATE Dorms SET ${fields.join(', ')} WHERE dorm_id = ?`, params);
+  return findDormById(dormId);
+}
+
+export async function deleteDorm(dormId) {
+  const [result] = await pool.query('DELETE FROM Dorms WHERE dorm_id = ?', [dormId]);
+  return result.affectedRows > 0;
+}
+
+// Sets/replaces a dorm's photo. Any authenticated user can currently
+// contribute a photo (see dorms.controller.js) — there's no per-dorm
+// ownership concept in this schema, unlike listings which have no
+// owner either. Overwrites rather than appending; a gallery of
+// multiple photos would need a separate Dorm_Photo table.
+export async function setDormImage(dormId, imageUrl) {
+  await pool.query('UPDATE Dorms SET image_url = ? WHERE dorm_id = ?', [imageUrl, dormId]);
+  return findDormById(dormId);
+}
