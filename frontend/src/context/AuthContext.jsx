@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useCallback, useEffect } from "rea
 import { authApi } from "../api/auth";
 import { api } from "../api/client";
 
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -24,6 +26,12 @@ export function AuthProvider({ children }) {
       setCheckingAuth(false);
       return;
     }
+
+    if (DEMO_MODE && token === "demo-token") {
+      setCheckingAuth(false);
+      return;
+    }
+
     api
       .get("/auth/me", { auth: true })
       .then((data) => {
@@ -46,19 +54,71 @@ export function AuthProvider({ children }) {
     setUser(data.user);
   }
 
-  const login = useCallback(async (email, password) => {
-    const data = await authApi.login(email, password);
-    establishSession(data);
-  }, []);
+// Local demo mode for frontend testing only. Turned on by VITE_DEMO_MODE=true in frontend/.env.local.
+const startDemoSession = useCallback((payload = {}) => {
+  const demoUser = {
+    id: 1,
+    name: payload.name || "Demo Student",
+    email: payload.email || "demo@student.edu",
+    role: "student",
+  };
+
+  localStorage.setItem("token", "demo-token");
+  localStorage.setItem("user", JSON.stringify(demoUser));
+
+  setToken("demo-token");
+  setUser(demoUser);
+
+  return {
+    token: "demo-token",
+    user: demoUser,
+  };
+}, []);
+
+const login = useCallback(
+  async (email, password) => {
+    try {
+      const data = await authApi.login(email, password);
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      setToken(data.token);
+      setUser(data.user);
+
+      return data;
+    } catch (error) {
+      if (DEMO_MODE) {
+        return startDemoSession({
+          email,
+          name: "Demo Student",
+        });
+      }
+
+      throw error;
+    }
+  },
+  [startDemoSession]
+);
 
   // Deliberately does NOT establish a session — the backend doesn't
   // issue a token on register. The account exists but can't log in
   // until the email link is verified. Returns the raw response so
   // Register.jsx can show the "check your email" message (and, in dev
   // mode, the devVerificationLink for testing without real email).
-  const register = useCallback(async (payload) => {
-    return authApi.register(payload);
-  }, []);
+  const register = useCallback(
+    async (payload) => {
+      if (DEMO_MODE) {
+        return startDemoSession({
+          email: payload.email,
+          name: payload.name || "Demo Student",
+        });
+      }
+  
+      return authApi.register(payload);
+    },
+    [startDemoSession]
+  );
 
   // Verifying an email logs the user in immediately — smoother than
   // sending them back to a manual login screen right after they just
