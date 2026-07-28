@@ -24,6 +24,20 @@ function formatHousingInterest(value) {
   return "Not specified";
 }
 
+function formatSleepSchedule(value) {
+  if (value === "early_bird") return "Early Bird";
+  if (value === "night_owl") return "Night Owl";
+  if (value === "flexible") return "Flexible";
+  return "Not specified";
+}
+
+function formatStudyHabits(value) {
+  if (value === "in_room") return "Studies In Room";
+  if (value === "library") return "Studies at Library";
+  if (value === "flexible") return "Flexible";
+  return "Not specified";
+}
+
 function getCompatibility(score) {
   return Math.round(Number(score) || 0);
 }
@@ -47,7 +61,7 @@ function getTraitTags(match) {
   }
 
   if (match.other_sleep_schedule) {
-    tags.push(match.other_sleep_schedule);
+    tags.push(formatSleepSchedule(match.other_sleep_schedule));
   }
 
   if (match.other_noise_tolerance) {
@@ -55,7 +69,7 @@ function getTraitTags(match) {
   }
 
   if (match.other_study_habits) {
-    tags.push(match.other_study_habits);
+    tags.push(formatStudyHabits(match.other_study_habits));
   }
 
   return tags.slice(0, 4);
@@ -98,6 +112,7 @@ function RoommateMatches() {
   const [analysisByMatch, setAnalysisByMatch] = useState({});
   const [analyzingId, setAnalyzingId] = useState(null);
   const [activeTab, setActiveTab] = useState("discover");
+  const [viewingProfile, setViewingProfile] = useState(null);
 
   function handleOpenChat(match) {
     if (!canMessageMatch(match)) {
@@ -445,9 +460,7 @@ function RoommateMatches() {
                   <button
                     type="button"
                     className="roommate-profile-link"
-                    onClick={() =>
-                      showToast("Profile view still needs to be connected.", "info")
-                    }
+                    onClick={() => setViewingProfile(match)}
                   >
                     View Profile
                   </button>
@@ -461,6 +474,124 @@ function RoommateMatches() {
       <p className="roommate-verified-note">
         All matches are based on verified profiles and preferences.
       </p>
+
+      {viewingProfile && (
+        <div
+          className="profile-modal-overlay"
+          onClick={() => setViewingProfile(null)}
+        >
+          <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="profile-modal-close"
+              onClick={() => setViewingProfile(null)}
+              aria-label="Close profile"
+            >
+              ✕
+            </button>
+
+            <div className="roommate-profile-photo profile-modal-photo">
+              {viewingProfile.other_profile_picture ? (
+                <img
+                  src={viewingProfile.other_profile_picture}
+                  alt={`${viewingProfile.other_user_name}'s profile`}
+                />
+              ) : (
+                <span>{getInitials(viewingProfile.other_user_name)}</span>
+              )}
+            </div>
+
+            <h2>{viewingProfile.other_user_name}</h2>
+            <p className="roommate-meta">
+              🏫 {viewingProfile.other_school_name || "School unavailable"}
+              {" · "}
+              {viewingProfile.other_major || "Major unavailable"}
+            </p>
+
+            <div className="profile-modal-grid">
+              <div>
+                <strong>Budget</strong>
+                <p>{formatBudget(viewingProfile)}</p>
+              </div>
+              <div>
+                <strong>Housing Interest</strong>
+                <p>{formatHousingInterest(viewingProfile.other_housing_interest)}</p>
+              </div>
+              <div>
+                <strong>Sleep Schedule</strong>
+                <p>{formatSleepSchedule(viewingProfile.other_sleep_schedule)}</p>
+              </div>
+              <div>
+                <strong>Study Habits</strong>
+                <p>{formatStudyHabits(viewingProfile.other_study_habits)}</p>
+              </div>
+              <div>
+                <strong>Cleanliness</strong>
+                <p>{viewingProfile.other_cleanliness_level ?? "—"}/5</p>
+              </div>
+              <div>
+                <strong>Noise Tolerance</strong>
+                <p>{viewingProfile.other_noise_tolerance ?? "—"}/5</p>
+              </div>
+              <div>
+                <strong>Social Level</strong>
+                <p>{viewingProfile.other_social_level ?? "—"}/5</p>
+              </div>
+              <div>
+                <strong>Move-in Date</strong>
+                <p>
+                  {viewingProfile.other_move_in_date
+                    ? new Date(viewingProfile.other_move_in_date).toLocaleDateString()
+                    : "Not specified"}
+                </p>
+              </div>
+              <div>
+                <strong>Smoking</strong>
+                <p>{viewingProfile.other_smoking ? "Yes" : "No"}</p>
+              </div>
+              <div>
+                <strong>Pets</strong>
+                <p>{viewingProfile.other_pets ? "Yes" : "No"}</p>
+              </div>
+            </div>
+
+            {viewingProfile.other_bio && (
+              <div className="profile-modal-section">
+                <strong>Bio</strong>
+                <p>{viewingProfile.other_bio}</p>
+              </div>
+            )}
+
+            {viewingProfile.other_roommate_pet_peeve && (
+              <div className="profile-modal-section">
+                <strong>Biggest roommate pet peeve</strong>
+                <p>{viewingProfile.other_roommate_pet_peeve}</p>
+              </div>
+            )}
+
+            {viewingProfile.other_conflict_style && (
+              <div className="profile-modal-section">
+                <strong>Conflict style</strong>
+                <p>{viewingProfile.other_conflict_style}</p>
+              </div>
+            )}
+
+            {viewingProfile.other_visitor_style && (
+              <div className="profile-modal-section">
+                <strong>Visitor style</strong>
+                <p>{viewingProfile.other_visitor_style}</p>
+              </div>
+            )}
+
+            {viewingProfile.other_boundaries && (
+              <div className="profile-modal-section">
+                <strong>Boundaries</strong>
+                <p>{viewingProfile.other_boundaries}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
