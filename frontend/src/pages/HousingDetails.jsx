@@ -10,6 +10,7 @@ import { favoritesApi } from "../api/favorites";
 import StarRating from "../components/StarRating";
 import SkeletonCards from "../components/SkeletonCards";
 import PhotoPlaceholder from "../components/PhotoPlaceholder";
+import { getDormImage, getListingImage } from "../assets/housingImages";
 
 const RATING_FIELDS = {
   dorm: [
@@ -207,12 +208,18 @@ function HousingDetails() {
   
   const priceLabel = type === "dorm" ? "/Semester" : "/Month";
   
+  const fallbackImage =
+    type === "dorm"
+      ? getDormImage(place.name)
+      : getListingImage(place.address, place.bedrooms);
+
   const images = [
     place.image_url,
     place.photo_url,
     place.image,
     ...(place.gallery || []),
     ...(place.images || []),
+    fallbackImage,
   ].filter(Boolean);
   
   const amenities = normalizeAmenities(place.amenities);
@@ -231,6 +238,14 @@ function HousingDetails() {
 
           <p className="blue-text">{subtitle}</p>
 
+          {type === "listing" && place.bedrooms != null && (
+            <p className="listing-bed-bath">
+              🛏️ {place.bedrooms} bed{Number(place.bedrooms) === 1 ? "" : "s"}
+              {place.bathrooms != null &&
+                ` · 🛁 ${place.bathrooms} bath${Number(place.bathrooms) === 1 ? "" : "s"}`}
+            </p>
+          )}
+
           <div className="housing-rating-line">
             <StarRating rating={rating} />
             <span>({reviews.length} reviews)</span>
@@ -238,8 +253,14 @@ function HousingDetails() {
         </div>
 
         <div className="details-price-box">
-          <h2>{formatPrice(price)}</h2>
-          <p>{priceLabel}</p>
+          {type === "dorm" ? (
+            <p className="muted-text dorm-cost-note">Included in tuition</p>
+          ) : (
+            <>
+              <h2>{formatPrice(price)}</h2>
+              <p>{priceLabel}</p>
+            </>
+          )}
 
           <button className="primary-btn">Contact Housing</button>
 
