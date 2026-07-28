@@ -10,7 +10,7 @@ import { favoritesApi } from "../api/favorites";
 import StarRating from "../components/StarRating";
 import SkeletonCards from "../components/SkeletonCards";
 import PhotoPlaceholder from "../components/PhotoPlaceholder";
-import { getDormImage, getListingImage } from "../assets/housingImages";
+import { getDormImages, getListingImage } from "../assets/housingImages";
 
 const RATING_FIELDS = {
   dorm: [
@@ -84,6 +84,8 @@ function HousingDetails() {
   const [addingRoom, setAddingRoom] = useState(false);
   const [addRoomError, setAddRoomError] = useState(null);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [reportedReviewIds, setReportedReviewIds] = useState(new Set());
 
   const placeApi = type === "dorm" ? dormsApi : listingsApi;
   const reviewApi = type === "dorm" ? dormReviewsApi : listingReviewsApi;
@@ -182,6 +184,52 @@ function HousingDetails() {
     }
   }
 
+  function handlePhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("Please choose an image file.", "error");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      showToast("That image is too large (max 8MB).", "error");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      setUploadingPhoto(true);
+      try {
+        const updated = await placeApi.setImage(id, reader.result);
+        setPlace((prev) => ({ ...prev, image_url: updated.image_url }));
+        showToast("Photo updated!", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setUploadingPhoto(false);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  async function handleReportReview(review) {
+    const reviewId = review.dorm_review_id ?? review.listing_review_id;
+    const reason = window.prompt(
+      "Why are you reporting this review? (e.g. spam, offensive content, fake review)"
+    );
+    if (!reason || !reason.trim()) return;
+
+    try {
+      await reviewApi.report(id, reviewId, reason.trim());
+      setReportedReviewIds((prev) => new Set(prev).add(reviewId));
+      showToast("Review reported. A moderator will take a look.", "success");
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  }
+
   if (loading) {
     return (
       <main className="page">
@@ -208,10 +256,10 @@ function HousingDetails() {
   
   const priceLabel = type === "dorm" ? "/Semester" : "/Month";
   
-  const fallbackImage =
+  const fallbackImages =
     type === "dorm"
-      ? getDormImage(place.name)
-      : getListingImage(place.address, place.bedrooms);
+      ? getDormImages(place.name, place.school_name)
+      : [getListingImage(place.address, place.bedrooms)].filter(Boolean);
 
   const images = [
     place.image_url,
@@ -219,7 +267,7 @@ function HousingDetails() {
     place.image,
     ...(place.gallery || []),
     ...(place.images || []),
-    fallbackImage,
+    ...fallbackImages,
   ].filter(Boolean);
   
   const amenities = normalizeAmenities(place.amenities);
@@ -268,6 +316,19 @@ function HousingDetails() {
             <button className="secondary-btn" onClick={toggleFavorite}>
               {isFavorited ? "Saved" : "Save Listing"}
             </button>
+          )}
+
+          {isAuthenticated && (
+            <label className="secondary-btn photo-upload-label">
+              {uploadingPhoto ? "Uploading..." : "📷 Add/Update Photo"}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                disabled={uploadingPhoto}
+                hidden
+              />
+            </label>
           )}
         </div>
       </div>
@@ -353,6 +414,21 @@ function HousingDetails() {
                 </p>
 
                 <p>{review.body}</p>
+
+                {isAuthenticated && (
+                  <button
+                    type="button"
+                    className="report-review-link"
+                    disabled={reportedReviewIds.has(
+                      review.dorm_review_id ?? review.listing_review_id
+                    )}
+                    onClick={() => handleReportReview(review)}
+                  >
+                    {reportedReviewIds.has(review.dorm_review_id ?? review.listing_review_id)
+                      ? "🚩 Reported"
+                      : "🚩 Report"}
+                  </button>
+                )}
               </div>
             ))}
           </div>
