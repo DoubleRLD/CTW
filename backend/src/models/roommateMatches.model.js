@@ -39,23 +39,53 @@ export async function findMatchesForProfile(profileId) {
     `SELECT
        m.*,
        CASE WHEN m.profile_id_a = ? THEN m.profile_id_b ELSE m.profile_id_a END AS other_profile_id,
+       u.user_id AS other_user_id,
        u.name AS other_user_name,
+       s.name AS other_school_name,
+       rp.major AS other_major,
+       rp.housing_interest AS other_housing_interest,
        rp.bio AS other_bio,
        rp.profile_picture AS other_profile_picture,
+       rp.roommate_pet_peeve AS other_roommate_pet_peeve,
+       rp.conflict_style AS other_conflict_style,
+       rp.visitor_style AS other_visitor_style,
+       rp.boundaries AS other_boundaries,
        rp.sleep_schedule AS other_sleep_schedule,
        rp.cleanliness_level AS other_cleanliness_level,
        rp.noise_tolerance AS other_noise_tolerance,
+       rp.study_habits AS other_study_habits,
+       rp.social_level AS other_social_level,
+       rp.smoking AS other_smoking,
+       rp.pets AS other_pets,
        rp.budget_min AS other_budget_min,
-       rp.budget_max AS other_budget_max
+       rp.budget_max AS other_budget_max,
+       rp.move_in_date AS other_move_in_date
      FROM Roommate_Match m
      JOIN Roommate_Profile rp
        ON rp.room_profile_id = CASE WHEN m.profile_id_a = ? THEN m.profile_id_b ELSE m.profile_id_a END
      JOIN Users u ON u.user_id = rp.user_id
+     LEFT JOIN Schools s ON s.school_id = rp.school_id
      WHERE m.profile_id_a = ? OR m.profile_id_b = ?
      ORDER BY m.compatibility_score DESC`,
     [profileId, profileId, profileId, profileId]
   );
   return rows;
+}
+
+// Marks the caller as the one who initiated a roommate request for a
+// match the scoring pass already created. Only settable once (WHERE
+// requester_user_id IS NULL) so a match can't be "re-sent" by either
+// side after the fact, and so the other person's later Accept/Decline
+// always resolves a single, unambiguous requester.
+export async function sendMatchRequest(matchId, requesterUserId) {
+  const [result] = await pool.query(
+    `UPDATE Roommate_Match
+     SET requester_user_id = ?
+     WHERE match_id = ? AND requester_user_id IS NULL`,
+    [requesterUserId, matchId]
+  );
+  if (result.affectedRows === 0) return null;
+  return findMatchById(matchId);
 }
 
 export async function findMatchById(matchId) {

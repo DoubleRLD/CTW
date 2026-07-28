@@ -7,6 +7,7 @@ import PageHeader from "../components/PageHeader";
 import PhotoPlaceholder from "../components/PhotoPlaceholder";
 import StarRating from "../components/StarRating";
 import SkeletonCards from "../components/SkeletonCards";
+import { getListingImage } from "../assets/housingImages";
 
 function Favorites() {
   const { isAuthenticated } = useAuth();
@@ -65,10 +66,18 @@ function Favorites() {
         <div className="card-grid">
           {listings.map((l) => (
             <div className="card" key={l.listing_id}>
-              <PhotoPlaceholder size="card" />
+              {(l.image_url || l.photo_url || l.image || getListingImage(l.address, l.bedrooms)) ? (
+                <img
+                  className="housing-search-image"
+                  src={l.image_url || l.photo_url || l.image || getListingImage(l.address, l.bedrooms)}
+                  alt={l.name || l.address}
+                />
+              ) : (
+                <PhotoPlaceholder size="card" />
+              )}
               <h3>{l.name || l.address}</h3>
               {l.name && <p className="small-text">{l.address}</p>}
-              <p>{l.school_names || 'No linked school yet'} · {l.bedrooms} bed · ${l.monthly_rent}/mo</p>
+              <p>{l.school_names || 'No linked school yet'} · {l.bedrooms} bed · {l.bathrooms} bath · ${l.monthly_rent}/mo</p>
               <StarRating rating={l.avg_rating != null ? Number(l.avg_rating) : null} />
               <Link to={`/housing/listing/${l.listing_id}`} className="primary-btn" style={{ marginTop: 12, display: "inline-block" }}>
                 View

@@ -17,6 +17,27 @@ function formatBudget(match) {
   return "Not specified";
 }
 
+function formatHousingInterest(value) {
+  if (value === "on_campus") return "On-Campus";
+  if (value === "off_campus") return "Off-Campus";
+  if (value === "either") return "Either";
+  return "Not specified";
+}
+
+function formatSleepSchedule(value) {
+  if (value === "early_bird") return "Early Bird";
+  if (value === "night_owl") return "Night Owl";
+  if (value === "flexible") return "Flexible";
+  return "Not specified";
+}
+
+function formatStudyHabits(value) {
+  if (value === "in_room") return "Studies In Room";
+  if (value === "library") return "Studies at Library";
+  if (value === "flexible") return "Flexible";
+  return "Not specified";
+}
+
 function getCompatibility(score) {
   return Math.round(Number(score) || 0);
 }
@@ -40,7 +61,7 @@ function getTraitTags(match) {
   }
 
   if (match.other_sleep_schedule) {
-    tags.push(match.other_sleep_schedule);
+    tags.push(formatSleepSchedule(match.other_sleep_schedule));
   }
 
   if (match.other_noise_tolerance) {
@@ -48,7 +69,7 @@ function getTraitTags(match) {
   }
 
   if (match.other_study_habits) {
-    tags.push(match.other_study_habits);
+    tags.push(formatStudyHabits(match.other_study_habits));
   }
 
   return tags.slice(0, 4);
@@ -68,52 +89,13 @@ function isPendingRequest(match) {
   );
 }
 
-function getStatusBadge(match, user) {
-  const status = getStatus(match);
-  const direction = getRequestDirection(match, user);
-
-  if (isAcceptedMatch(match)) {
-    return { label: "Matched", type: "accepted" };
-  }
-
-  if (isPendingRequest(match)) {
-    if (direction === "incoming") {
-      return { label: "Incoming Request", type: "incoming" };
-    }
-
-    if (direction === "outgoing") {
-      return { label: "Request Sent", type: "sent" };
-    }
-
-    return { label: "Pending", type: "pending" };
-  }
-
-  return { label: status ? status.replace(/_/g, " ") : "Unknown", type: "unknown" };
-}
-
 function getRequestDirection(match, user) {
-  const direction =
-    match.request_direction || match.direction || match.requestDirection;
-
-  if (direction) return String(direction).toLowerCase();
-
-  if (match.is_incoming || match.incoming) return "incoming";
-  if (match.is_outgoing || match.outgoing) return "outgoing";
+  if (!match.requester_user_id) return "none";
 
   const currentUserId = user?.id || user?.user_id;
-  const requesterId =
-    match.requester_user_id || match.sender_id || match.created_by_user_id;
-
-  if (currentUserId && requesterId) {
-    return Number(requesterId) === Number(currentUserId)
-      ? "outgoing"
-      : "incoming";
-  }
-
-  if (getStatus(match) === "pending_sent") return "outgoing";
-  if (getStatus(match) === "pending_received") return "incoming";
-
-  return "unknown";
+  return Number(match.requester_user_id) === Number(currentUserId)
+    ? "outgoing"
+    : "incoming";
 }
 
 function canMessageMatch(match) {
@@ -129,7 +111,8 @@ function RoommateMatches() {
   const [respondingId, setRespondingId] = useState(null);
   const [analysisByMatch, setAnalysisByMatch] = useState({});
   const [analyzingId, setAnalyzingId] = useState(null);
-  const [activeTab, setActiveTab] = useState("matches");
+  const [activeTab, setActiveTab] = useState("discover");
+  const [viewingProfile, setViewingProfile] = useState(null);
 
   function handleOpenChat(match) {
     if (!canMessageMatch(match)) {
@@ -150,6 +133,12 @@ function RoommateMatches() {
   }, [isAuthenticated]);
 
   const visibleMatches = useMemo(() => {
+    if (activeTab === "discover") {
+      return matches.filter(
+        (match) => getStatus(match) === "pending" && getRequestDirection(match, user) === "none"
+      );
+    }
+
     if (activeTab === "matches") {
       return matches.filter((match) => isAcceptedMatch(match));
     }
@@ -199,6 +188,25 @@ function RoommateMatches() {
     }
   }
 
+  async function handleSendRequest(matchId) {
+    setRespondingId(matchId);
+    try {
+      const updated = await roommateMatchesApi.sendRequest(matchId);
+      setMatches((prev) =>
+        prev.map((m) =>
+          m.match_id === matchId
+            ? { ...m, requester_user_id: updated.requester_user_id }
+            : m
+        )
+      );
+      showToast("Roommate request sent!", "success");
+    } catch (err) {
+      showToast(err.message, "error");
+    } finally {
+      setRespondingId(null);
+    }
+  }
+
   async function handleAnalysis(matchId) {
       setAnalyzingId(matchId);
 
@@ -241,6 +249,14 @@ function RoommateMatches() {
         <div className="roommate-tabs">
           <button
             type="button"
+            className={activeTab === "discover" ? "active" : ""}
+            onClick={() => setActiveTab("discover")}
+          >
+            🔎 Discover
+          </button>
+
+          <button
+            type="button"
             className={activeTab === "matches" ? "active" : ""}
             onClick={() => setActiveTab("matches")}
           >
@@ -280,9 +296,12 @@ function RoommateMatches() {
           <div className="empty-state-icon">🤝</div>
           <h3>No matches yet</h3>
           <p>
-          {activeTab === "matches"
-            ? "No other students have roommate profiles yet this semester — check back soon."
-            : "Nothing to show in this tab yet."}
+          {activeTab === "discover" &&
+            "No new candidates right now — check back once more students fill out roommate profiles."}
+          {activeTab === "matches" &&
+            "No confirmed matches yet — accept a request or send one from Discover."}
+          {activeTab === "requests" && "No incoming roommate requests right now."}
+          {activeTab === "sent" && "You haven't sent any roommate requests yet."}
           </p>
         </div>
       )}
@@ -292,7 +311,6 @@ function RoommateMatches() {
           {visibleMatches.map((match) => {
             const traits = getTraitTags(match);
             const compatibility = getCompatibility(match.compatibility_score);
-            const statusBadge = getStatusBadge(match, user);
 
             return (
               <div className="roommate-match-card" key={match.match_id}>
@@ -308,12 +326,7 @@ function RoommateMatches() {
                 </div>
 
                 <div className="roommate-match-info">
-                  <div className="roommate-card-header">
-                    <h2>{match.other_user_name}</h2>
-                    <span className={`roommate-status-badge ${statusBadge.type}`}>
-                      {statusBadge.label}
-                    </span>
-                  </div>
+                  <h2>{match.other_user_name}</h2>
 
                   <p className="roommate-meta">
                     🏫{" "}
@@ -340,9 +353,7 @@ function RoommateMatches() {
 
                   <p>
                     <strong>Housing Interest:</strong>{" "}
-                    {match.other_housing_interest ||
-                      match.other_preferred_housing ||
-                      "Not specified"}
+                    {formatHousingInterest(match.other_housing_interest)}
                   </p>
 
                   {match.other_bio && (
@@ -373,6 +384,30 @@ function RoommateMatches() {
                 <div className="roommate-score-panel">
                   <h3>{compatibility}%</h3>
                   <p>Compatibility</p>
+
+                  {activeTab === "discover" && (
+                    <>
+                      <button
+                        type="button"
+                        className="primary-btn"
+                        disabled={respondingId === match.match_id}
+                        onClick={() => handleSendRequest(match.match_id)}
+                      >
+                        {respondingId === match.match_id ? "Sending..." : "🤝 Send Request"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="secondary-btn"
+                        disabled={analyzingId === match.match_id}
+                        onClick={() => handleAnalysis(match.match_id)}
+                      >
+                        {analyzingId === match.match_id
+                          ? "Analyzing..."
+                          : "View AI Analysis"}
+                      </button>
+                    </>
+                  )}
 
                     {activeTab === "requests" && (
                     <div className="roommate-action-stack">
@@ -425,9 +460,7 @@ function RoommateMatches() {
                   <button
                     type="button"
                     className="roommate-profile-link"
-                    onClick={() =>
-                      showToast("Profile view still needs to be connected.", "info")
-                    }
+                    onClick={() => setViewingProfile(match)}
                   >
                     View Profile
                   </button>
@@ -441,6 +474,143 @@ function RoommateMatches() {
       <p className="roommate-verified-note">
         All matches are based on verified profiles and preferences.
       </p>
+
+      {viewingProfile && (
+        <div
+          className="profile-modal-overlay"
+          onClick={() => setViewingProfile(null)}
+        >
+          <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="profile-modal-close"
+              onClick={() => setViewingProfile(null)}
+              aria-label="Close profile"
+            >
+              ✕
+            </button>
+            {analysisByMatch[match.match_id] && (
+                <div>
+                    <h3>AI Compatibility Analysis</h3>
+                    <p>
+                        <strong>Original Score:</strong>
+                        {analysisByMatch[match.match_id].score}%
+                    </p>
+                    <p>
+                        <strong>AI Adjustment: </strong>{" "}
+                        {analysisByMatch[match.match_id].adjustment > 0 ? "+" :""}
+                        {analysisByMatch[match.match_id].adjustment} points
+                    </p>
+                    <p>
+                        <strong>Adjusted Score:</strong>
+                        {analysisByMatch[match.match_id].adjustedScore}%
+                    </p>
+                    <p>{analysisByMatch[match.match_id].explanation}</p>
+
+                </div>
+
+            <div className="roommate-profile-photo profile-modal-photo">
+              {viewingProfile.other_profile_picture ? (
+                <img
+                  src={viewingProfile.other_profile_picture}
+                  alt={`${viewingProfile.other_user_name}'s profile`}
+                />
+              ) : (
+                <span>{getInitials(viewingProfile.other_user_name)}</span>
+              )}
+            </div>
+
+            <h2>{viewingProfile.other_user_name}</h2>
+            <p className="roommate-meta">
+              🏫 {viewingProfile.other_school_name || "School unavailable"}
+              {" · "}
+              {viewingProfile.other_major || "Major unavailable"}
+            </p>
+
+            <div className="profile-modal-grid">
+              <div>
+                <strong>Budget</strong>
+                <p>{formatBudget(viewingProfile)}</p>
+              </div>
+              <div>
+                <strong>Housing Interest</strong>
+                <p>{formatHousingInterest(viewingProfile.other_housing_interest)}</p>
+              </div>
+              <div>
+                <strong>Sleep Schedule</strong>
+                <p>{formatSleepSchedule(viewingProfile.other_sleep_schedule)}</p>
+              </div>
+              <div>
+                <strong>Study Habits</strong>
+                <p>{formatStudyHabits(viewingProfile.other_study_habits)}</p>
+              </div>
+              <div>
+                <strong>Cleanliness</strong>
+                <p>{viewingProfile.other_cleanliness_level ?? "—"}/5</p>
+              </div>
+              <div>
+                <strong>Noise Tolerance</strong>
+                <p>{viewingProfile.other_noise_tolerance ?? "—"}/5</p>
+              </div>
+              <div>
+                <strong>Social Level</strong>
+                <p>{viewingProfile.other_social_level ?? "—"}/5</p>
+              </div>
+              <div>
+                <strong>Move-in Date</strong>
+                <p>
+                  {viewingProfile.other_move_in_date
+                    ? new Date(viewingProfile.other_move_in_date).toLocaleDateString()
+                    : "Not specified"}
+                </p>
+              </div>
+              <div>
+                <strong>Smoking</strong>
+                <p>{viewingProfile.other_smoking ? "Yes" : "No"}</p>
+              </div>
+              <div>
+                <strong>Pets</strong>
+                <p>{viewingProfile.other_pets ? "Yes" : "No"}</p>
+              </div>
+            </div>
+
+            {viewingProfile.other_bio && (
+              <div className="profile-modal-section">
+                <strong>Bio</strong>
+                <p>{viewingProfile.other_bio}</p>
+              </div>
+            )}
+
+            {viewingProfile.other_roommate_pet_peeve && (
+              <div className="profile-modal-section">
+                <strong>Biggest roommate pet peeve</strong>
+                <p>{viewingProfile.other_roommate_pet_peeve}</p>
+              </div>
+            )}
+
+            {viewingProfile.other_conflict_style && (
+              <div className="profile-modal-section">
+                <strong>Conflict style</strong>
+                <p>{viewingProfile.other_conflict_style}</p>
+              </div>
+            )}
+
+            {viewingProfile.other_visitor_style && (
+              <div className="profile-modal-section">
+                <strong>Visitor style</strong>
+                <p>{viewingProfile.other_visitor_style}</p>
+              </div>
+            )}
+
+            {viewingProfile.other_boundaries && (
+              <div className="profile-modal-section">
+                <strong>Boundaries</strong>
+                <p>{viewingProfile.other_boundaries}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

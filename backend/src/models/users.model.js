@@ -7,7 +7,7 @@ export async function findUserByEmail(email) {
 
 export async function findUserById(userId) {
   const [rows] = await pool.query(
-    'SELECT user_id, school_id, name, email, email_verified, created_at FROM Users WHERE user_id = ?',
+    'SELECT user_id, school_id, name, email, email_verified, is_admin, created_at FROM Users WHERE user_id = ?',
     [userId]
   );
   return rows[0] || null;
@@ -63,4 +63,27 @@ export async function setVerificationToken(userId, tokenHash, expiresAt) {
     'UPDATE Users SET verification_token_hash = ?, verification_token_expires = ? WHERE user_id = ?',
     [tokenHash, expiresAt, userId]
   );
+}
+
+// ---------- Admin user management ----------
+
+export async function findAllUsersForAdmin() {
+  const [rows] = await pool.query(
+    `SELECT u.user_id, u.name, u.email, u.email_verified, u.is_admin, u.is_banned,
+            u.created_at, s.name AS school_name
+     FROM Users u
+     LEFT JOIN Schools s ON s.school_id = u.school_id
+     ORDER BY u.created_at DESC`
+  );
+  return rows;
+}
+
+export async function setUserBanned(userId, banned) {
+  await pool.query('UPDATE Users SET is_banned = ? WHERE user_id = ?', [banned, userId]);
+  return findUserById(userId);
+}
+
+export async function setUserAdmin(userId, isAdmin) {
+  await pool.query('UPDATE Users SET is_admin = ? WHERE user_id = ?', [isAdmin, userId]);
+  return findUserById(userId);
 }

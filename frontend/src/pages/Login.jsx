@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/dormscout-logo.png";
 
 function Login() {
   const { login, resendVerification } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get("sessionExpired") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -59,6 +61,12 @@ function Login() {
           <p className="form-helper">
             Enter your student account information to continue.
           </p>
+
+          {sessionExpired && !error && (
+            <p className="session-expired-banner">
+              Your session expired. Please log in again.
+            </p>
+          )}
 
           {error && <p style={{ color: "crimson" }}>{error}</p>}
 

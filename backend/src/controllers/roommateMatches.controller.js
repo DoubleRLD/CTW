@@ -42,7 +42,12 @@ export const getMyMatches = asyncHandler(async (req, res) => {
     }
 
     const existing = await MatchesModel.findMatch(myProfile.room_profile_id, candidate.room_profile_id);
-    if (!existing) {
+    // Recompute whenever there's no score yet, or the match is still
+    // 'pending' — profile edits should actually move the number for
+    // anything undecided. Once someone has accepted/rejected a match,
+    // the score is left as-is: it's the number they made that call on,
+    // and silently changing it after the fact would be confusing.
+    if (!existing || existing.status === 'pending') {
       const score = computeCompatibilityScore(myProfile, candidate);
       await MatchesModel.upsertMatchScore(myProfile.room_profile_id, candidate.room_profile_id, score);
     }
@@ -79,6 +84,35 @@ export const getMatchAnalysis = asyncHandler(async (req,res) => {
   });
 });
 
+// POST /api/roommate-matches/:matchId/request  (auth required)
+// Claims an already-scored candidate match as "I sent this person a
+// request." Fails silently (409) if someone already claimed it first
+// — the DB-level guard in sendMatchRequest is the real source of
+// truth, this just turns that into a clean HTTP response.
+export const sendRoommateRequest = asyncHandler(async (req, res) => {
+  const matchId = Number(req.params.matchId);
+
+  const match = await MatchesModel.findMatchById(matchId);
+  if (!match) throw new ApiError(404, 'Match not found.');
+
+  const profileA = await ProfilesModel.findProfileById(match.profile_id_a);
+  const profileB = await ProfilesModel.findProfileById(match.profile_id_b);
+  const ownsMatch =
+    profileA?.user_id === req.user.userId || profileB?.user_id === req.user.userId;
+  if (!ownsMatch) throw new ApiError(403, 'You are not part of this match.');
+
+  if (match.status !== 'pending') {
+    throw new ApiError(409, 'This match has already been responded to.');
+  }
+
+  const updated = await MatchesModel.sendMatchRequest(matchId, req.user.userId);
+  if (!updated) {
+    throw new ApiError(409, 'A roommate request has already been sent for this match.');
+  }
+
+  res.json(updated);
+});
+
 // POST /api/roommate-matches/:matchId/respond  (auth required)
 // body: { status: "accepted" | "rejected" }
 export const respondToMatch = asyncHandler(async (req, res) => {
@@ -96,6 +130,13 @@ export const respondToMatch = asyncHandler(async (req, res) => {
   const ownsMatch =
     profileA?.user_id === req.user.userId || profileB?.user_id === req.user.userId;
   if (!ownsMatch) throw new ApiError(403, 'You are not part of this match.');
+
+  if (!match.requester_user_id) {
+    throw new ApiError(400, 'No roommate request has been sent for this match yet.');
+  }
+  if (match.requester_user_id === req.user.userId) {
+    throw new ApiError(403, 'You cannot respond to your own request.');
+  }
 
   const updated = await MatchesModel.updateMatchStatus(matchId, status);
   res.json(updated);

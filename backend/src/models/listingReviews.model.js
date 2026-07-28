@@ -44,3 +44,9 @@ export async function deleteReview(reviewId, userId) {
   );
   return result.affectedRows > 0;
 }
+
+// Used only by the moderation flow (requireAdmin-gated).
+export async function adminDeleteReview(reviewId) {
+  const [result] = await pool.query('DELETE FROM Listing_Review WHERE listing_review_id = ?', [reviewId]);
+  return result.affectedRows > 0;
+}

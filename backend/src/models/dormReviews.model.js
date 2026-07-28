@@ -63,3 +63,10 @@ export async function deleteReview(reviewId, userId) {
   );
   return result.affectedRows > 0;
 }
+
+// Used only by the moderation flow (requireAdmin-gated) — deliberately
+// has no userId filter, unlike the self-service deleteReview above.
+export async function adminDeleteReview(reviewId) {
+  const [result] = await pool.query('DELETE FROM Dorm_Review WHERE dorm_review_id = ?', [reviewId]);
+  return result.affectedRows > 0;
+}

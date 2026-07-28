@@ -98,3 +98,44 @@ export async function createListing({
     conn.release();
   }
 }
+
+// Sets/replaces a listing's photo. Same overwrite-not-append approach
+// as setDormImage.
+export async function setListingImage(listingId, imageUrl) {
+  await pool.query('UPDATE Listings SET image_url = ? WHERE listing_id = ?', [imageUrl, listingId]);
+  return findListingById(listingId);
+}
+
+// Admin edit — only updates fields actually provided.
+export async function updateListing(listingId, data) {
+  const columnMap = {
+    landlordId: 'landlord_id',
+    name: 'name',
+    address: 'address',
+    latitude: 'latitude',
+    longitude: 'longitude',
+    monthlyRent: 'monthly_rent',
+    bedrooms: 'bedrooms',
+    bathrooms: 'bathrooms',
+    listingType: 'listing_type',
+  };
+
+  const fields = [];
+  const params = [];
+  for (const [key, column] of Object.entries(columnMap)) {
+    if (data[key] !== undefined) {
+      fields.push(`${column} = ?`);
+      params.push(data[key]);
+    }
+  }
+  if (fields.length === 0) return findListingById(listingId);
+
+  params.push(listingId);
+  await pool.query(`UPDATE Listings SET ${fields.join(', ')} WHERE listing_id = ?`, params);
+  return findListingById(listingId);
+}
+
+export async function deleteListing(listingId) {
+  const [result] = await pool.query('DELETE FROM Listings WHERE listing_id = ?', [listingId]);
+  return result.affectedRows > 0;
+}

@@ -42,6 +42,8 @@ export async function upsertProfile(data) {
   if (existing) {
     await pool.query(
       `UPDATE Roommate_Profile SET
+         major = ?,
+         housing_interest = ?,
          bio = ?, 
          profile_picture = ?,
          roommate_pet_peeve = ?, 
@@ -60,6 +62,8 @@ export async function upsertProfile(data) {
          move_in_date = ?
        WHERE room_profile_id = ?`,
       [
+        data.major ?? null,
+        data.housingInterest ?? null,
         data.bio ?? null,
         data.profilePicture ?? null,
         data.roommatePetPeeve ?? null,
@@ -88,6 +92,8 @@ export async function upsertProfile(data) {
         school_id, 
         semester, 
         semester_year, 
+        major,
+        housing_interest,
         bio, 
         profile_picture,
         roommate_pet_peeve, 
@@ -104,12 +110,14 @@ export async function upsertProfile(data) {
         budget_min, 
         budget_max, 
         move_in_date)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       data.userId,
       data.schoolId,
       data.semester,
       data.semesterYear,
+      data.major ?? null,
+      data.housingInterest ?? null,
       data.bio ?? null,
       data.profilePicture ?? null,
       data.roommatePetPeeve ?? null,

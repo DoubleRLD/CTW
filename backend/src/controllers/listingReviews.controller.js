@@ -1,7 +1,8 @@
 import * as ListingReviewsModel from '../models/listingReviews.model.js';
 import * as ListingsModel from '../models/listings.model.js';
+import * as ReportsModel from '../models/reviewReports.model.js';
 import { asyncHandler, ApiError } from '../middleware/errorHandler.js';
-import { createListingReviewSchema, parseOrThrow } from '../middleware/validate.js';
+import { createListingReviewSchema, reportReviewSchema, parseOrThrow } from '../middleware/validate.js';
 
 // GET /api/listings/:listingId/reviews
 export const listReviewsForListing = asyncHandler(async (req, res) => {
@@ -36,10 +37,34 @@ export const createReviewForListing = asyncHandler(async (req, res) => {
   res.status(201).json(review);
 });
 
-// DELETE /api/listings/:listingId/reviews/:reviewId  (auth required, own review only)
+// DELETE /api/listings/:listingId/reviews/:reviewId  (auth required — own review, or any review if admin)
 export const deleteReview = asyncHandler(async (req, res) => {
   const reviewId = Number(req.params.reviewId);
+
+  if (req.user.isAdmin) {
+    const deleted = await ListingReviewsModel.adminDeleteReview(reviewId);
+    if (!deleted) throw new ApiError(404, 'Review not found.');
+    return res.status(204).send();
+  }
+
   const deleted = await ListingReviewsModel.deleteReview(reviewId, req.user.userId);
   if (!deleted) throw new ApiError(404, 'Review not found or not owned by you.');
   res.status(204).send();
+});
+
+// POST /api/listings/:listingId/reviews/:reviewId/report  (auth required)
+export const reportReview = asyncHandler(async (req, res) => {
+  const reviewId = Number(req.params.reviewId);
+  const review = await ListingReviewsModel.findReviewById(reviewId);
+  if (!review) throw new ApiError(404, 'Review not found.');
+
+  const { reason } = parseOrThrow(reportReviewSchema, req.body, ApiError);
+  const report = await ReportsModel.createReport({
+    reviewType: 'listing',
+    reviewId,
+    reporterUserId: req.user.userId,
+    reason,
+  });
+
+  res.status(201).json(report);
 });

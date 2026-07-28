@@ -8,6 +8,8 @@ const DEFAULT_FORM = {
   semester: "Fall",
   semesterYear: new Date().getFullYear(),
   housingPreference: "either",
+  major: "",
+  housingInterest: "",
   bio: "",
   profilePicture: "",
   roommatePetPeeve: "",
@@ -47,6 +49,8 @@ function RoommateProfile() {
           semester: profile.semester,
           semesterYear: profile.semester_year,
           housingPreference: profile.housing_preference,
+          major: profile.major || "",
+          housingInterest: profile.housing_interest || "",
           bio: profile.bio || "",
           roommatePetPeeve: profile.roommate_pet_peeve || "",
           profilePicture: profile.profile_picture || "",
@@ -110,6 +114,7 @@ function RoommateProfile() {
         socialLevel: Number(form.socialLevel),
         budgetMin: form.budgetMin === "" ? undefined : Number(form.budgetMin),
         budgetMax: form.budgetMax === "" ? undefined : Number(form.budgetMax),
+        housingInterest: form.housingInterest || undefined,
         moveInDate: form.moveInDate || undefined,
       });
       setSaved(true);
@@ -173,6 +178,30 @@ function RoommateProfile() {
                   value={form.semesterYear}
                   onChange={(e) => update("semesterYear", e.target.value)}
                 />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-field">
+                <label>Major</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Computer Science"
+                  value={form.major}
+                  onChange={(e) => update("major", e.target.value)}
+                />
+              </div>
+              <div className="form-field">
+                <label>Housing Interest</label>
+                <select
+                  value={form.housingInterest}
+                  onChange={(e) => update("housingInterest", e.target.value)}
+                >
+                  <option value="">Not specified</option>
+                  <option value="on_campus">On-Campus</option>
+                  <option value="off_campus">Off-Campus</option>
+                  <option value="either">Either</option>
+                </select>
               </div>
             </div>
 

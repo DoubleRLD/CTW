@@ -9,6 +9,7 @@ import StarRating from "../components/StarRating";
 import SkeletonCards from "../components/SkeletonCards";
 import PhotoPlaceholder from "../components/PhotoPlaceholder";
 import PageHeader from "../components/PageHeader";
+import { getDormImage, getListingImage } from "../assets/housingImages";
 
 function normalizeAmenities(value, fallback) {
   if (Array.isArray(value) && value.length > 0) return value;
@@ -41,7 +42,7 @@ function normalizeDorm(d) {
     price: d.semester_cost ?? d.price ?? null,
     priceLabel: "/Semester",
     distance: d.distance || `Near ${d.school_name || "campus"}`,
-    image: d.image_url || d.photo_url || d.image || "",
+    image: d.image_url || d.photo_url || d.image || getDormImage(d.name),
     amenities: normalizeAmenities(d.amenities, [
       "Wifi",
       "Laundry",
@@ -67,8 +68,10 @@ function normalizeListing(l) {
     reviewCount: l.review_count ?? l.reviews_count ?? 0,
     price: l.monthly_rent ?? l.price ?? null,
     priceLabel: "/Month",
+    bedrooms: l.bedrooms ?? null,
+    bathrooms: l.bathrooms ?? null,
     distance: l.distance || "Distance unavailable",
-    image: l.image_url || l.photo_url || l.image || "",
+    image: l.image_url || l.photo_url || l.image || getListingImage(l.address, l.bedrooms),
     amenities: normalizeAmenities(l.amenities, [
       "Wifi",
       "Laundry",
@@ -163,10 +166,10 @@ function HousingSearch() {
     return sorted;
   }, [filtered, sortFilter]);
 
-  // Groups the filtered results by campus, alphabetically.
+  // Groups the sorted, filtered results by campus, alphabetically.
   const grouped = useMemo(() => {
     const map = new Map();
-    for (const h of filtered) {
+    for (const h of sortedFiltered) {
       if (!map.has(h.school)) map.set(h.school, []);
       map.get(h.school).push(h);
     }
@@ -211,18 +214,16 @@ function HousingSearch() {
         )}
 
         <div className="housing-search-info">
-          <div className="housing-card-badges">
-            <span className={`housing-card-badge ${h.type}`}>
-              {h.type === "dorm" ? "On-Campus" : "Off-Campus"}
-            </span>
-            {h.type === "listing" && favoriteIds.has(h.id) && (
-              <span className="housing-card-badge saved">Saved</span>
-            )}
-          </div>
-
           <h2>{h.name}</h2>
 
           <p className="blue-text">{h.subtitle}</p>
+
+          {h.type === "listing" && h.bedrooms != null && (
+            <p className="listing-bed-bath">
+              🛏️ {h.bedrooms} bed{Number(h.bedrooms) === 1 ? "" : "s"}
+              {h.bathrooms != null && ` · 🛁 ${h.bathrooms} bath${Number(h.bathrooms) === 1 ? "" : "s"}`}
+            </p>
+          )}
 
           <div className="rating-line housing-rating-line">
             <StarRating rating={h.rawRating} />
@@ -239,8 +240,14 @@ function HousingSearch() {
         </div>
 
         <div className="housing-search-price">
-          <h2>{formatPrice(h.price)}</h2>
-          <p>{h.priceLabel}</p>
+          {h.type === "dorm" ? (
+            <p className="muted-text dorm-cost-note">Included in tuition</p>
+          ) : (
+            <>
+              <h2>{formatPrice(h.price)}</h2>
+              <p>{h.priceLabel}</p>
+            </>
+          )}
 
           <div className="housing-card-actions">
             <Link to={`/housing/${h.type}/${h.id}`} className="primary-btn">

@@ -6,6 +6,17 @@ function getToken() {
   return localStorage.getItem("token");
 }
 
+// AuthContext registers itself here on mount so this plain module
+// (outside the React tree) can trigger a logout + redirect when a
+// request comes back 401 with a token attached — i.e. the token
+// expired or was invalidated mid-session, not just "wrong password"
+// on a login attempt (which also returns 401 but with auth:false,
+// so it never reaches this path).
+let sessionExpiredHandler = null;
+export function setSessionExpiredHandler(fn) {
+  sessionExpiredHandler = fn;
+}
+
 // Every request funnels through here: attaches the auth header when
 // a token exists, parses JSON, and throws a real Error with the
 // server's message on non-2xx responses so callers can catch() it
@@ -27,6 +38,9 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
+    if (res.status === 401 && auth) {
+      sessionExpiredHandler?.();
+    }
     throw new Error(data?.error || `Request failed with status ${res.status}`);
   }
 
