@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { roommateMatchesApi } from "../api/roommateMatches";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -9,8 +9,96 @@ import PageHeader from "../components/PageHeader";
 const CURRENT_SEMESTER = "Fall";
 const CURRENT_YEAR = new Date().getFullYear();
 
+function formatBudget(match) {
+  if (match.other_budget_min && match.other_budget_max) {
+    return `$${match.other_budget_min} - $${match.other_budget_max} / month`;
+  }
+
+  return "Not specified";
+}
+
+function getCompatibility(score) {
+  return Math.round(Number(score) || 0);
+}
+
+function getInitials(name) {
+  if (!name) return "?";
+
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function getTraitTags(match) {
+  const tags = [];
+
+  if (match.other_cleanliness_level) {
+    tags.push(`Clean ${match.other_cleanliness_level}/5`);
+  }
+
+  if (match.other_sleep_schedule) {
+    tags.push(match.other_sleep_schedule);
+  }
+
+  if (match.other_noise_tolerance) {
+    tags.push(`Noise ${match.other_noise_tolerance}/5`);
+  }
+
+  if (match.other_study_habits) {
+    tags.push(match.other_study_habits);
+  }
+
+  return tags.slice(0, 4);
+}
+
+function getStatus(match) {
+  return String(match.status || "").toLowerCase();
+}
+
+function isAcceptedMatch(match) {
+  return ["accepted", "matched", "approved"].includes(getStatus(match));
+}
+
+function isPendingRequest(match) {
+  return ["pending", "requested", "sent", "pending_sent", "pending_received"].includes(
+    getStatus(match)
+  );
+}
+
+function getRequestDirection(match, user) {
+  const direction =
+    match.request_direction || match.direction || match.requestDirection;
+
+  if (direction) return String(direction).toLowerCase();
+
+  if (match.is_incoming || match.incoming) return "incoming";
+  if (match.is_outgoing || match.outgoing) return "outgoing";
+
+  const currentUserId = user?.id || user?.user_id;
+  const requesterId =
+    match.requester_user_id || match.sender_id || match.created_by_user_id;
+
+  if (currentUserId && requesterId) {
+    return Number(requesterId) === Number(currentUserId)
+      ? "outgoing"
+      : "incoming";
+  }
+
+  if (getStatus(match) === "pending_sent") return "outgoing";
+  if (getStatus(match) === "pending_received") return "incoming";
+
+  return "unknown";
+}
+
+function canMessageMatch(match) {
+  return isAcceptedMatch(match);
+}
+
 function RoommateMatches() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { showToast } = useToast();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +106,16 @@ function RoommateMatches() {
   const [respondingId, setRespondingId] = useState(null);
   const [analysisByMatch, setAnalysisByMatch] = useState({});
   const [analyzingId, setAnalyzingId] = useState(null);
+  const [activeTab, setActiveTab] = useState("matches");
+
+  function handleOpenChat(match) {
+    if (!canMessageMatch(match)) {
+      showToast("Chat becomes available after a roommate match is accepted.", "info");
+      return;
+    }
+  
+    showToast("Messaging screen still needs to be connected to the backend.", "info");
+  }
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -27,6 +125,30 @@ function RoommateMatches() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
+
+  const visibleMatches = useMemo(() => {
+    if (activeTab === "matches") {
+      return matches.filter((match) => isAcceptedMatch(match));
+    }
+  
+    if (activeTab === "requests") {
+      return matches.filter(
+        (match) =>
+          isPendingRequest(match) &&
+          getRequestDirection(match, user) === "incoming"
+      );
+    }
+  
+    if (activeTab === "sent") {
+      return matches.filter(
+        (match) =>
+          isPendingRequest(match) &&
+          getRequestDirection(match, user) === "outgoing"
+      );
+    }
+  
+    return matches;
+  }, [matches, activeTab, user]);
 
   async function load() {
     try {
@@ -89,10 +211,36 @@ function RoommateMatches() {
   return (
     <main className="page">
       <PageHeader
-        title="Roommate Matches"
-        subtitle="Matches are computed from your roommate profile — sleep schedule, cleanliness, noise tolerance, study habits, and budget overlap."
-        icon="🤝"
-      />
+        title="Roommate Matching"
+        subtitle="Based on your profile and preferences"
+        icon="👥"
+      >
+        <div className="roommate-tabs">
+          <button
+            type="button"
+            className={activeTab === "matches" ? "active" : ""}
+            onClick={() => setActiveTab("matches")}
+          >
+            👥 Matches
+          </button>
+
+          <button
+            type="button"
+            className={activeTab === "requests" ? "active" : ""}
+            onClick={() => setActiveTab("requests")}
+          >
+            🧑‍🤝‍🧑 Requests
+          </button>
+
+          <button
+            type="button"
+            className={activeTab === "sent" ? "active" : ""}
+            onClick={() => setActiveTab("sent")}
+          >
+            🎓 Sent
+          </button>
+        </div>
+      </PageHeader>
 
       {loading && <SkeletonCards count={3} />}
       {error && (
@@ -104,89 +252,166 @@ function RoommateMatches() {
         </p>
       )}
 
-      {!loading && !error && matches.length === 0 && (
+      {!loading && !error && visibleMatches.length === 0 && (
         <div className="empty-state">
           <div className="empty-state-icon">🤝</div>
           <h3>No matches yet</h3>
-          <p>No other students have roommate profiles yet this semester — check back soon.</p>
+          <p>
+          {activeTab === "matches"
+            ? "No other students have roommate profiles yet this semester — check back soon."
+            : "Nothing to show in this tab yet."}
+          </p>
         </div>
       )}
 
-      <div className="card-grid">
-        {matches.map((match) => (
-          <div className="card" key={match.match_id}>
-            <h2>{match.other_user_name}</h2>
-              {match.other_profile_picture && (
-                  <img
+      {!loading && !error && visibleMatches.length > 0 && (
+        <div className="roommate-match-list">
+          {visibleMatches.map((match) => {
+            const traits = getTraitTags(match);
+            const compatibility = getCompatibility(match.compatibility_score);
+
+            return (
+              <div className="roommate-match-card" key={match.match_id}>
+                <div className="roommate-profile-photo">
+                  {match.other_profile_picture ? (
+                    <img
                       src={match.other_profile_picture}
                       alt={`${match.other_user_name}'s profile`}
-                      style={{
-                          width: '120px',
-                          height: '120px',
-                          objectFit: 'cover',
-                          borderRadius: '50%',
-                          marginBottom: '12px',
-                      }}
-                      />
-              )}
-            <p><strong>Sleep Schedule:</strong> {match.other_sleep_schedule}</p>
-            <p><strong>Cleanliness:</strong> {match.other_cleanliness_level}/5</p>
-            <p><strong>Noise Tolerance:</strong> {match.other_noise_tolerance}/5</p>
-            <p>
-              <strong>Budget:</strong>{" "}
-              {match.other_budget_min && match.other_budget_max
-                ? `$${match.other_budget_min} - $${match.other_budget_max}`
-                : "Not specified"}
-            </p>
-            <p>{match.other_bio}</p>
-            <div>
-              <ScoreBadge score={match.compatibility_score} />
-            </div>
-            <p><strong>Status:</strong> {match.status}</p>
-
-            <button
-                className="secondary-btn"
-                disabled={analyzingId === match.match_id}
-                onClick={() => handleAnalysis(match.match_id)}
-             >
-                {analyzingId === match.match_id ? "Analyzing..." : "View AI Analysis"}
-            </button>
-            {analysisByMatch[match.match_id] && (
-                <div>
-                    <h3>AI Compatibility Analysis</h3>
-                    <div>
-                        <ScoreBadge score={analysisByMatch[match.match_id].adjustedScore} />
-                    </div>
-                    <p>
-                        <strong>AI Adjustment: </strong>{" "}
-                        {analysisByMatch[match.match_id].adjustment > 0 ? "+" :""}
-                        {analysisByMatch[match.match_id].adjustment} points
-                    </p>
-                    <p>{analysisByMatch[match.match_id].explanation}</p>
-
+                    />
+                  ) : (
+                    <span>{getInitials(match.other_user_name)}</span>
+                  )}
                 </div>
-              )}
 
-            {match.status === "pending" && (
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  disabled={respondingId === match.match_id}
-                  onClick={() => handleRespond(match.match_id, "accepted")}
-                >
-                  Accept
-                </button>
-                <button
-                  className="secondary-btn"
-                  disabled={respondingId === match.match_id}
-                  onClick={() => handleRespond(match.match_id, "rejected")}
-                >
-                  Decline
-                </button>
+                <div className="roommate-match-info">
+                  <h2>{match.other_user_name}</h2>
+
+                  <p className="roommate-meta">
+                    🏫{" "}
+                    {match.other_school_name ||
+                      match.other_school ||
+                      "School unavailable"}
+                    {" · "}
+                    {match.other_year || match.other_class_year || "Student"}
+                    {" · "}
+                    {match.other_major || "Major unavailable"}
+                  </p>
+
+                  <div className="roommate-tags">
+                    {traits.length > 0 ? (
+                      traits.map((trait) => <span key={trait}>{trait}</span>)
+                    ) : (
+                      <span>Profile preferences available</span>
+                    )}
+                  </div>
+
+                  <p>
+                    <strong>Budget:</strong> {formatBudget(match)}
+                  </p>
+
+                  <p>
+                    <strong>Housing Interest:</strong>{" "}
+                    {match.other_housing_interest ||
+                      match.other_preferred_housing ||
+                      "Not specified"}
+                  </p>
+
+                  {match.other_bio && (
+                    <p className="roommate-bio">{match.other_bio}</p>
+                  )}
+
+                  {analysisByMatch[match.match_id] && (
+                    <div className="roommate-ai-analysis">
+                      <h3>AI Compatibility Analysis</h3>
+
+                      <ScoreBadge
+                        score={analysisByMatch[match.match_id].adjustedScore}
+                      />
+
+                      <p>
+                        <strong>AI Adjustment:</strong>{" "}
+                        {analysisByMatch[match.match_id].adjustment > 0
+                          ? "+"
+                          : ""}
+                        {analysisByMatch[match.match_id].adjustment} points
+                      </p>
+
+                      <p>{analysisByMatch[match.match_id].explanation}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="roommate-score-panel">
+                  <h3>{compatibility}%</h3>
+                  <p>Compatibility</p>
+
+                    {activeTab === "requests" && (
+                    <div className="roommate-action-stack">
+                      <button
+                        disabled={respondingId === match.match_id}
+                        onClick={() => handleRespond(match.match_id, "accepted")}
+                      >
+                        Accept
+                      </button>
+
+                      <button
+                        className="secondary-btn"
+                        disabled={respondingId === match.match_id}
+                        onClick={() => handleRespond(match.match_id, "rejected")}
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  )}
+
+                  {activeTab === "sent" && (
+                    <button className="secondary-btn" disabled>
+                      Request Sent
+                    </button>
+                  )}
+
+                  {activeTab === "matches" && (
+                    <>
+                      <button
+                        type="button"
+                        className="primary-btn"
+                        onClick={() => handleOpenChat(match)}
+                      >
+                        💬 Message Match
+                      </button>
+
+                      <button
+                        type="button"
+                        className="secondary-btn"
+                        disabled={analyzingId === match.match_id}
+                        onClick={() => handleAnalysis(match.match_id)}
+                      >
+                        {analyzingId === match.match_id
+                          ? "Analyzing..."
+                          : "View AI Analysis"}
+                      </button>
+                    </>
+                  )}
+
+                  <button
+                    type="button"
+                    className="roommate-profile-link"
+                    onClick={() =>
+                      showToast("Profile view still needs to be connected.", "info")
+                    }
+                  >
+                    View Profile
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
+
+      <p className="roommate-verified-note">
+        All matches are based on verified profiles and preferences.
+      </p>
     </main>
   );
 }
