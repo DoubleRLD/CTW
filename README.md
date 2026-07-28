@@ -1,20 +1,15 @@
-# DormScout
+# DormScout — Setup Guide
 
-DormScout is a Georgia-based student housing and roomate matching platform created by DoubleRLD.
+## Running it yourself in VS Code
 
-The system allows students to search on-campus dorms and off-campus housing, read and write housing reviews, create roommate profiles, and view compatibility-based roommate matches.
 
-## Project Structure
+### 1. Install everything and run it — one command
+```bash
+npm run install-all
+npm run dev
+```
+This runs `concurrently` and starts:
+- Backend at **http://localhost:4000**
+- Frontend at **http://localhost:5173**
 
-- Frontend: React frontend
-- Backend: Node/Express backend
-- Database: MySQL
-- Docs: project documentation
-
-## Running the project
-
-npm run install-all   # installs backend + frontend dependencies
-
-npm run dev            # runs both servers together
-
-Requires a running MySQL instance — see /database/README.md for setup.
+Open `http://localhost:5173` in your browser.
