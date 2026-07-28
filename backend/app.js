@@ -1,19 +1,16 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import dormsRouter from './src/routes/dorms.routes.js';
+import authRouter from './src/routes/auth.routes.js';
+import listingsRouter from './src/routes/listings.routes.js';
+import roommateProfilesRouter from './src/routes/roommateProfiles.routes.js';
+import roommateMatchesRouter from './src/routes/roommateMatches.routes.js';
+import favoritesRouter from './src/routes/favorites.routes.js';
+import activityRouter from './src/routes/activity.routes.js';
+import moderationRouter from './src/routes/moderation.routes.js';
+import schoolsRouter from './src/routes/schools.routes.js';
+import adminUsersRouter from './src/routes/adminUsers.routes.js';
 
-import dormsRouter from './routes/dorms.routes.js';
-import authRouter from './routes/auth.routes.js';
-import listingsRouter from './routes/listings.routes.js';
-import roommateProfilesRouter from './routes/roommateProfiles.routes.js';
-import roommateMatchesRouter from './routes/roommateMatches.routes.js';
-import favoritesRouter from './routes/favorites.routes.js';
-import activityRouter from './routes/activity.routes.js';
-import moderationRouter from './routes/moderation.routes.js';
-import schoolsRouter from './routes/schools.routes.js';
-import adminUsersRouter from './routes/adminUsers.routes.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import { apiLimiter } from './middleware/rateLimit.js';
+import { errorHandler } from './src/middleware/errorHandler.js';
+import { apiLimiter } from './src/middleware/rateLimit.js';
 
 dotenv.config();
 
