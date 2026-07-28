@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { authApi } from "../api/auth";
-import { api } from "../api/client";
+import { api, setSessionExpiredHandler } from "../api/client";
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
 
@@ -20,6 +20,19 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
   }, []);
+
+  // Wired to client.js so any authenticated request that comes back
+  // 401 (expired/invalidated token) clears the session and sends the
+  // person back to login with an explanatory message, instead of every
+  // subsequent request just failing silently in the background.
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      logout();
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.assign("/login?sessionExpired=1");
+      }
+    });
+  }, [logout]);
 
   useEffect(() => {
     if (!token) {
