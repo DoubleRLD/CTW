@@ -1,4 +1,4 @@
-import * as SchoolsModel from '../models/schools.model.js';
+import * as SchoolsModel from '../models/school.model.js';
 import { asyncHandler, ApiError } from '../middleware/errorHandler.js';
 import { createSchoolSchema, updateSchoolSchema, addDomainSchema, parseOrThrow } from '../middleware/validate.js';
 
