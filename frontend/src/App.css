@@ -1158,6 +1158,43 @@ textarea {
   margin-top: auto;
 }
 
+/* Added styling for Housing Preference*/
+.housing-options {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.housing-options button {
+    flex: 1;
+    padding: 14px;
+    border: 2px solid #d9d9d9;
+    border-radius: 10px;
+    background: #f8f9fa;
+    color: #444;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.housing-options button:hover {
+    border-color: #2563eb;
+    background: #eef4ff;
+}
+
+.housing-options button.selected {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+}
+
+.housing-help {
+    display: block;
+    margin-top: 8px;
+    color: #666;
+    font-size: .9rem;
+}
 /* Housing Search Page */
 
 .housing-search-bar {

@@ -27,7 +27,7 @@ export async function findProfilesForMatching({ schoolId, semester, semesterYear
     `SELECT rp.*, u.name AS user_name
      FROM Roommate_Profile rp
      JOIN Users u ON u.user_id = rp.user_id
-     WHERE rp.school_id = ? AND rp.semester = ? AND rp.semester_year = ? AND rp.user_id != ?`,
+     WHERE rp.semester = ? AND rp.semester_year = ? AND rp.user_id != ?`,
     [schoolId, semester, semesterYear, excludeUserId]
   );
   return rows;

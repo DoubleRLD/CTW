@@ -1,6 +1,6 @@
 import * as ProfilesModel from '../models/roommateProfiles.model.js';
 import * as MatchesModel from '../models/roommateMatches.model.js';
-import { computeCompatibilityScore } from '../services/matchingService.js';
+import { computeCompatibilityScore, housingPreferencesMatch } from '../services/matchingService.js';
 import { generateMatchExplanation } from "../services/aiMatchingService.js";
 import { asyncHandler, ApiError } from '../middleware/errorHandler.js';
 import { respondToMatchSchema, parseOrThrow } from '../middleware/validate.js';
@@ -8,7 +8,7 @@ import { respondToMatchSchema, parseOrThrow } from '../middleware/validate.js';
 // GET /api/roommate-matches/me?semester=Fall&semesterYear=2026
 //
 // Computes-on-read rather than relying on a cron job: for every other
-// candidate profile at the same school/semester that this user hasn't
+// candidate profile for the same semester that this user hasn't
 // been scored against yet, compute + store the score, then return all
 // matches for their profile sorted by compatibility. This keeps the
 // scaffold simple (no job scheduler needed) while still avoiding
@@ -31,13 +31,16 @@ export const getMyMatches = asyncHandler(async (req, res) => {
   }
 
   const candidates = await ProfilesModel.findProfilesForMatching({
-    schoolId: req.user.schoolId,
     semester,
     semesterYear: Number(semesterYear),
     excludeUserId: req.user.userId,
   });
 
   for (const candidate of candidates) {
+    if(!housingPreferencesMatch(myProfile, candidate)) {
+      continue;
+    }
+
     const existing = await MatchesModel.findMatch(myProfile.room_profile_id, candidate.room_profile_id);
     // Recompute whenever there's no score yet, or the match is still
     // 'pending' — profile edits should actually move the number for

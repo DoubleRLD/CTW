@@ -62,6 +62,27 @@ function budgetOverlapScore(profileA, profileB) {
   const widestRange = Math.max(aMax - aMin, bMax - bMin, 1); // avoid divide-by-zero
   return Math.min(1, overlap / widestRange);
 }
+function housingPreferencesMatch(profileA, profileB) {
+  // Are the users from the same school?
+  const sameSchool = profileA.school_id === profileB.school_id;
+
+  // Default to "either" if an older profile doesn't have this field yet
+  const preferenceA = profileA.housing_preference ?? "either";
+  const preferenceB = profileB.housing_preference ?? "either";
+
+  // Can both users live off campus?
+  const bothAllowOffCampus =
+    ["off_campus", "either"].includes(preferenceA) &&
+    ["off_campus", "either"].includes(preferenceB);
+
+  // Can both users live on campus?
+  const bothAllowOnCampus =
+    sameSchool &&
+    ["on_campus", "either"].includes(preferenceA) &&
+    ["on_campus", "either"].includes(preferenceB);
+
+  return bothAllowOffCampus || bothAllowOnCampus;
+}
 
 export function computeCompatibilityScore(profileA, profileB) {
   const scores = {
