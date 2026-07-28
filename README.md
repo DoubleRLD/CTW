@@ -10,3 +10,11 @@ The system allows students to search on-campus dorms and off-campus housing, rea
 - Backend: Node/Express backend
 - Database: MySQL
 - Docs: project documentation
+
+## Running the project
+
+npm run install-all   # installs backend + frontend dependencies
+
+npm run dev            # runs both servers together
+
+Requires a running MySQL instance — see /database/README.md for setup.

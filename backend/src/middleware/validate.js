@@ -22,8 +22,17 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1),
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.string().email(),
+});
+
 export const createListingSchema = z.object({
   landlordId: z.number().int().positive().optional(),
+  name: z.string().max(255).optional(),
   address: z.string().min(1).max(255),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
@@ -62,6 +71,8 @@ export const roommateProfileSchema = z
   .object({
     semester: semesterEnum,
     semesterYear: z.number().int().min(2000).max(2100),
+    major: z.string().max(255).optional(),
+    housingInterest: z.enum(['on_campus', 'off_campus', 'either']).optional(),
     bio: z.string().max(2000).optional(),
     profilePicture: z.string().url().max(10000000).optional().or(z.literal("")),
     roommatePetPeeve: z.string().max(2000).optional(),

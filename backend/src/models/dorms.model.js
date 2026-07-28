@@ -2,9 +2,15 @@ import { pool } from '../config/db.js';
 
 export async function findAllDorms({ schoolId }) {
   let sql = `
-    SELECT d.*, s.name AS school_name
+    SELECT
+      d.*,
+      s.name AS school_name,
+      ROUND(AVG(dr.overall_rating), 2) AS avg_rating,
+      COUNT(DISTINCT dr.dorm_review_id) AS review_count
     FROM Dorms d
     JOIN Schools s ON s.school_id = d.school_id
+    LEFT JOIN Rooms r ON r.dorm_id = d.dorm_id
+    LEFT JOIN Dorm_Review dr ON dr.room_id = r.room_id
   `;
   const params = [];
 
@@ -13,7 +19,7 @@ export async function findAllDorms({ schoolId }) {
     params.push(schoolId);
   }
 
-  sql += ' ORDER BY d.name';
+  sql += ' GROUP BY d.dorm_id ORDER BY d.name';
   const [rows] = await pool.query(sql, params);
   return rows;
 }

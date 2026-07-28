@@ -1,0 +1,18 @@
+import greekHousing from "../assets/housing-photos/Greek Housing.jpg";
+import pattonHall from "../assets/housing-photos/Patton Hall.jpg";
+import piedmontCentral from "../assets/housing-photos/Piedmont Central.jpg";
+import piedmontNorth from "../assets/housing-photos/Piedmont North.jpg";
+import universityCommons from "../assets/housing-photos/University Commons.jpg";
+import universityLofts from "../assets/housing-photos/University Lofts.jpg";
+
+// Keyed by the exact dorm name as stored in Dorms.name. Anything not
+// in this map falls back to <PhotoPlaceholder /> — add more entries
+// here as photos for other dorms come in.
+export const dormPhotos = {
+  "Greek Housing": greekHousing,
+  "Patton Hall": pattonHall,
+  "Piedmont Central": piedmontCentral,
+  "Piedmont North": piedmontNorth,
+  "University Commons": universityCommons,
+  "University Lofts": universityLofts,
+};

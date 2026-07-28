@@ -13,12 +13,14 @@ export async function findUserById(userId) {
   return rows[0] || null;
 }
 
-// schoolId is resolved by the controller from the user's email domain
+// schoolId and the verification token are resolved by the controller
 // before this is called — see auth.controller.js.
-export async function createUser({ schoolId, name, email, passwordHash }) {
+export async function createUser({ schoolId, name, email, passwordHash, verificationTokenHash, verificationTokenExpires }) {
   const [result] = await pool.query(
-    'INSERT INTO Users (school_id, name, email, password_hash) VALUES (?, ?, ?, ?)',
-    [schoolId, name, email, passwordHash]
+    `INSERT INTO Users
+       (school_id, name, email, password_hash, verification_token_hash, verification_token_expires)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [schoolId, name, email, passwordHash, verificationTokenHash, verificationTokenExpires]
   );
   return findUserById(result.insertId);
 }
@@ -33,4 +35,32 @@ export async function findSchoolByDomain(domain) {
     [domain]
   );
   return rows[0] || null;
+}
+
+// Looks up by the token's hash, never the raw token — the raw value
+// only ever exists in the email link and the request that hits this
+// endpoint, never at rest in the database.
+export async function findUserByVerificationTokenHash(tokenHash) {
+  const [rows] = await pool.query(
+    'SELECT * FROM Users WHERE verification_token_hash = ?',
+    [tokenHash]
+  );
+  return rows[0] || null;
+}
+
+export async function markEmailVerified(userId) {
+  await pool.query(
+    `UPDATE Users
+     SET email_verified = TRUE, verification_token_hash = NULL, verification_token_expires = NULL
+     WHERE user_id = ?`,
+    [userId]
+  );
+  return findUserById(userId);
+}
+
+export async function setVerificationToken(userId, tokenHash, expiresAt) {
+  await pool.query(
+    'UPDATE Users SET verification_token_hash = ?, verification_token_expires = ? WHERE user_id = ?',
+    [tokenHash, expiresAt, userId]
+  );
 }

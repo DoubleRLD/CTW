@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/dormscout-logo.png";
 
 function Register() {
   const { register } = useAuth();
-  const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState(null); // holds the success response once registered
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -22,14 +22,55 @@ function Register() {
       // Note: there's no free-text "School" field here — the backend
       // derives your school from your email domain (see
       // auth.controller.js), so "jane@gsu.edu" only works if a School
-      // row with domain "gsu.edu" already exists in the database.
-      await register(form);
-      navigate("/dashboard");
+      // row with that domain already exists in the database.
+      const data = await register(form);
+      setResult(data);
     } catch (err) {
       setError(err.message);
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // After a successful register, the account exists but can't log in
+  // yet — show the "check your email" state instead of redirecting
+  // straight to the dashboard.
+  if (result) {
+    return (
+      <main className="page auth-page">
+        <div className="auth-card">
+          <section className="auth-brand-panel">
+            <img src={logo} alt="DormScout logo" className="auth-brand-logo" />
+            <h2>Almost there!</h2>
+            <p>One more step before you can start browsing housing and finding roommates.</p>
+          </section>
+
+          <section className="auth-form-panel">
+            <h1>Check your email</h1>
+            <p className="form-helper">{result.message}</p>
+            <p className="small-text">
+              We sent a verification link to <strong>{form.email}</strong>. Click it to
+              activate your account, then come back and log in.
+            </p>
+
+            {/* devVerificationLink only exists when the backend is running in
+                EMAIL_PROVIDER=console mode (local dev) — never in production. */}
+            {result.devVerificationLink && (
+              <div className="card">
+                <p className="small-text">
+                  <strong>Dev mode:</strong> no real email was sent. Use this link directly:
+                </p>
+                <a href={result.devVerificationLink}>{result.devVerificationLink}</a>
+              </div>
+            )}
+
+            <p className="auth-switch-text">
+              <Link to="/login">Back to login</Link>
+            </p>
+          </section>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -75,7 +116,9 @@ function Register() {
             />
 
             <p className="small-text">
-              Your school is detected from your email domain — make sure it matches your university's registered domain.
+              Your school is detected from your email domain — make sure it matches your
+              university's registered domain. You'll need to click a verification link
+              sent to this address before you can log in.
             </p>
 
             <label>Password</label>

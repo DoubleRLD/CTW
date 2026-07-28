@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { dormsApi } from "../api/dorms";
 import { listingsApi } from "../api/listings";
 import { dormReviewsApi } from "../api/dormReviews";
 import { listingReviewsApi } from "../api/listingReviews";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import { favoritesApi } from "../api/favorites";
+import StarRating from "../components/StarRating";
+import SkeletonCards from "../components/SkeletonCards";
+import PhotoPlaceholder from "../components/PhotoPlaceholder";
+import { getDormImages, getListingImage } from "../assets/housingImages";
 
 const RATING_FIELDS = {
   dorm: [
@@ -26,9 +31,35 @@ function emptyRatings(type) {
   return Object.fromEntries(RATING_FIELDS[type].map((f) => [f.key, 5]));
 }
 
+function formatPrice(price) {
+  if (!price) return "Price unavailable";
+  return `$${Number(price).toLocaleString()}`;
+}
+
+function normalizeAmenities(value) {
+  if (Array.isArray(value) && value.length > 0) return value;
+
+  if (typeof value === "string" && value.trim()) {
+    return value.split(",").map((item) => item.trim());
+  }
+
+  return [
+    "Wifi",
+    "Laundry",
+    "Study Lounge",
+    "Gym",
+    "Parking",
+    "Pool",
+    "Security",
+    "Package Lockers",
+    "Pet Friendly",
+  ];
+}
+
 function HousingDetails() {
   const { type, id } = useParams(); // "dorm" | "listing"
   const { isAuthenticated } = useAuth();
+  const { showToast } = useToast();
 
   const [place, setPlace] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -53,6 +84,8 @@ function HousingDetails() {
   const [addingRoom, setAddingRoom] = useState(false);
   const [addRoomError, setAddRoomError] = useState(null);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [reportedReviewIds, setReportedReviewIds] = useState(new Set());
 
   const placeApi = type === "dorm" ? dormsApi : listingsApi;
   const reviewApi = type === "dorm" ? dormReviewsApi : listingReviewsApi;
@@ -69,9 +102,6 @@ function HousingDetails() {
         setPlace(placeData);
         setReviews(reviewsData);
         setRooms(roomsData);
-        // If we're viewing a listing and the user is logged in, check
-        // whether this listing is in the user's saved favorites so the
-        // details page can show the correct Save/Saved state.
         if (type === 'listing' && isAuthenticated) {
           try {
             const favs = await favoritesApi.list();
@@ -88,7 +118,7 @@ function HousingDetails() {
     }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, id]);
+  }, [type, id, isAuthenticated]);
 
   function updateRating(key, value) {
     setForm((f) => ({ ...f, ratings: { ...f.ratings, [key]: Number(value) } }));
@@ -104,9 +134,10 @@ function HousingDetails() {
         roomNumber: newRoom.roomNumber,
       });
       setRooms((prev) => [...prev, room]);
-      setForm((f) => ({ ...f, roomId: String(room.room_id) })); // auto-select the room just added
+      setForm((f) => ({ ...f, roomId: String(room.room_id) }));
       setShowAddRoom(false);
       setNewRoom({ floor: "", roomNumber: "" });
+      showToast("Room added.", "success");
     } catch (err) {
       setAddRoomError(err.message);
     } finally {
@@ -129,6 +160,7 @@ function HousingDetails() {
       const newReview = await reviewApi.create(id, payload);
       setReviews((prev) => [newReview, ...prev]);
       setForm((f) => ({ ...f, body: "", ratings: emptyRatings(type) }));
+      showToast("Review submitted. Thanks for helping other students!", "success");
     } catch (err) {
       setSubmitError(err.message);
     } finally {
@@ -136,74 +168,280 @@ function HousingDetails() {
     }
   }
 
-  if (loading) return <main className="page"><p>Loading...</p></main>;
+  async function toggleFavorite() {
+    try {
+      if (isFavorited) {
+        await favoritesApi.remove(Number(id));
+        setIsFavorited(false);
+        showToast("Removed from saved listings.", "info");
+      } else {
+        await favoritesApi.add(Number(id));
+        setIsFavorited(true);
+        showToast("Saved to your favorites.", "success");
+      }
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  }
+
+  function handlePhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("Please choose an image file.", "error");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      showToast("That image is too large (max 8MB).", "error");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      setUploadingPhoto(true);
+      try {
+        const updated = await placeApi.setImage(id, reader.result);
+        setPlace((prev) => ({ ...prev, image_url: updated.image_url }));
+        showToast("Photo updated!", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        setUploadingPhoto(false);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  async function handleReportReview(review) {
+    const reviewId = review.dorm_review_id ?? review.listing_review_id;
+    const reason = window.prompt(
+      "Why are you reporting this review? (e.g. spam, offensive content, fake review)"
+    );
+    if (!reason || !reason.trim()) return;
+
+    try {
+      await reviewApi.report(id, reviewId, reason.trim());
+      setReportedReviewIds((prev) => new Set(prev).add(reviewId));
+      showToast("Review reported. A moderator will take a look.", "success");
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  }
+
+  if (loading) {
+    return (
+      <main className="page">
+        <div className="skeleton-line skeleton-title" style={{ height: "36px", width: "40%" }} />
+        <div className="skeleton-line skeleton-text" style={{ width: "25%" }} />
+        <SkeletonCards count={3} />
+      </main>
+    );
+  }
   if (error) return <main className="page"><p style={{ color: "crimson" }}>Error: {error}</p></main>;
   if (!place) return null;
 
-  const title = type === "dorm" ? place.name : place.address;
+  const title = type === "dorm" ? place.name : place.name || place.address;
+
   const subtitle =
     type === "dorm"
-      ? `${place.school_name} · On-Campus Dorm · Rating: ${place.avg_rating ?? "No ratings yet"}`
-      : `${place.school_names || "No linked school yet"} · Off-Campus · ${place.bedrooms} bed · $${place.monthly_rent}/mo · Rating: ${place.avg_rating ?? "No ratings yet"}`;
+      ? `On-Campus - ${place.school_name || "School unavailable"}`
+      : `Off-Campus - ${place.school_names || "No linked school yet"}`;
+  
+  const price =
+    type === "dorm"
+      ? place.semester_cost || place.price
+      : place.monthly_rent || place.price;
+  
+  const priceLabel = type === "dorm" ? "/Semester" : "/Month";
+  
+  const fallbackImages =
+    type === "dorm"
+      ? getDormImages(place.name, place.school_name)
+      : [getListingImage(place.address, place.bedrooms)].filter(Boolean);
+
+  const images = [
+    place.image_url,
+    place.photo_url,
+    place.image,
+    ...(place.gallery || []),
+    ...(place.images || []),
+    ...fallbackImages,
+  ].filter(Boolean);
+  
+  const amenities = normalizeAmenities(place.amenities);
+  
+  const rating = place.avg_rating != null ? Number(place.avg_rating) : null;
 
   return (
     <main className="page">
-      <section className="details-header">
-        <h1>{title}</h1>
-        <p>{subtitle}</p>
-        {type === 'listing' && isAuthenticated && (
-          <div style={{ marginTop: 8 }}>
-            <button
-              className="secondary-btn"
-              onClick={async () => {
-                try {
-                  if (isFavorited) {
-                    await favoritesApi.remove(Number(id));
-                    setIsFavorited(false);
-                  } else {
-                    await favoritesApi.add(Number(id));
-                    setIsFavorited(true);
-                  }
-                } catch (err) {
-                  alert(err.message);
-                }
-              }}
-            >
-              {isFavorited ? 'Saved' : 'Save Listing'}
+      <div className="housing-details-top">
+        <div>
+          <Link to="/housing" className="back-link">
+            ← Back to Search Results
+          </Link>
+
+          <h1>{title}</h1>
+
+          <p className="blue-text">{subtitle}</p>
+
+          {type === "listing" && place.bedrooms != null && (
+            <p className="listing-bed-bath">
+              🛏️ {place.bedrooms} bed{Number(place.bedrooms) === 1 ? "" : "s"}
+              {place.bathrooms != null &&
+                ` · 🛁 ${place.bathrooms} bath${Number(place.bathrooms) === 1 ? "" : "s"}`}
+            </p>
+          )}
+
+          <div className="housing-rating-line">
+            <StarRating rating={rating} />
+            <span>({reviews.length} reviews)</span>
+          </div>
+        </div>
+
+        <div className="details-price-box">
+          {type === "dorm" ? (
+            <p className="muted-text dorm-cost-note">Included in tuition</p>
+          ) : (
+            <>
+              <h2>{formatPrice(price)}</h2>
+              <p>{priceLabel}</p>
+            </>
+          )}
+
+          <button className="primary-btn">Contact Housing</button>
+
+          {type === "listing" && isAuthenticated && (
+            <button className="secondary-btn" onClick={toggleFavorite}>
+              {isFavorited ? "Saved" : "Save Listing"}
             </button>
+          )}
+
+          {isAuthenticated && (
+            <label className="secondary-btn photo-upload-label">
+              {uploadingPhoto ? "Uploading..." : "📷 Add/Update Photo"}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                disabled={uploadingPhoto}
+                hidden
+              />
+            </label>
+          )}
+        </div>
+      </div>
+
+      <section className="details-gallery">
+        {images[0] ? (
+          <img className="details-main-image" src={images[0]} alt={title} />
+        ) : (
+          <div className="details-main-image details-image-placeholder">
+            <PhotoPlaceholder size="hero" />
+          </div>
+        )}
+
+        <div className="details-side-gallery">
+          {images.slice(1, 5).map((image) => (
+            <img key={image} src={image} alt={`${title} gallery`} />
+          ))}
+
+          {images.length <= 1 &&
+            [1, 2, 3, 4].map((item) => (
+              <div className="details-side-placeholder" key={item}>
+                <PhotoPlaceholder size="card" />
+              </div>
+            ))}
+        </div>
+      </section>
+
+      <section className="details-info-grid">
+        <div className="details-panel">
+          <h2>About</h2>
+          <p>
+            {place.description ||
+              place.about ||
+              `${title} is a student housing option near campus.`}
+          </p>
+        </div>
+
+        <div className="details-panel">
+          <h2>Amenities</h2>
+
+          <div className="amenities-grid">
+            {amenities.map((amenity) => (
+              <span key={amenity}>• {amenity}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="reviews-section">
+        <div className="reviews-header">
+          <h2>Reviews ({reviews.length})</h2>
+        </div>
+
+        {reviews.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">📝</div>
+            <h3>No reviews yet</h3>
+            <p>Be the first to share your experience.</p>
+          </div>
+        ) : (
+          <div className="reviews-grid">
+            {reviews.map((review) => (
+              <div
+                className="review-card"
+                key={review.dorm_review_id ?? review.listing_review_id}
+              >
+                <div className="review-card-header">
+                  <div>
+                    <h3>{review.reviewer_name || "Student"}</h3>
+
+                    {type === "dorm" && review.room_number && (
+                      <p className="small-text">Room {review.room_number}</p>
+                    )}
+                  </div>
+
+                  <StarRating rating={review.overall_rating} />
+                </div>
+
+                <p>
+                  <strong>
+                    {review.semester} {review.semester_year}
+                  </strong>
+                </p>
+
+                <p>{review.body}</p>
+
+                {isAuthenticated && (
+                  <button
+                    type="button"
+                    className="report-review-link"
+                    disabled={reportedReviewIds.has(
+                      review.dorm_review_id ?? review.listing_review_id
+                    )}
+                    onClick={() => handleReportReview(review)}
+                  >
+                    {reportedReviewIds.has(review.dorm_review_id ?? review.listing_review_id)
+                      ? "🚩 Reported"
+                      : "🚩 Report"}
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </section>
 
-      <section>
-        <h2>Student Reviews</h2>
-
-        {reviews.length === 0 && <p>No reviews yet — be the first to leave one.</p>}
-
-        <div className="card-grid">
-          {reviews.map((review) => (
-            <div className="card" key={review.dorm_review_id ?? review.listing_review_id}>
-              <h3>{review.reviewer_name}</h3>
-              {/* room_number comes back from the backend join — "General" means
-                  the reviewer didn't specify a room when submitting. */}
-              {type === "dorm" && review.room_number && (
-                <p className="small-text">Room {review.room_number}</p>
-              )}
-              <p><strong>Overall:</strong> {review.overall_rating}/5</p>
-              <p><strong>{review.semester} {review.semester_year}</strong></p>
-              <p>{review.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="card">
+      <section className="write-review-section">
         <h2>Write a Review</h2>
 
         {!isAuthenticated && <p>You need to be logged in to leave a review.</p>}
         {submitError && <p style={{ color: "crimson" }}>{submitError}</p>}
 
-        <form className="form" onSubmit={handleSubmit}>
+        <form className="review-form" onSubmit={handleSubmit}>
           {type === "dorm" && (
             <>
               <label>Room</label>

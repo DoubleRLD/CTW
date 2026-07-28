@@ -39,7 +39,11 @@ export async function findMatchesForProfile(profileId) {
     `SELECT
        m.*,
        CASE WHEN m.profile_id_a = ? THEN m.profile_id_b ELSE m.profile_id_a END AS other_profile_id,
+       u.user_id AS other_user_id,
        u.name AS other_user_name,
+       s.name AS other_school_name,
+       rp.major AS other_major,
+       rp.housing_interest AS other_housing_interest,
        rp.bio AS other_bio,
        rp.profile_picture AS other_profile_picture,
        rp.sleep_schedule AS other_sleep_schedule,
@@ -51,11 +55,28 @@ export async function findMatchesForProfile(profileId) {
      JOIN Roommate_Profile rp
        ON rp.room_profile_id = CASE WHEN m.profile_id_a = ? THEN m.profile_id_b ELSE m.profile_id_a END
      JOIN Users u ON u.user_id = rp.user_id
+     LEFT JOIN Schools s ON s.school_id = rp.school_id
      WHERE m.profile_id_a = ? OR m.profile_id_b = ?
      ORDER BY m.compatibility_score DESC`,
     [profileId, profileId, profileId, profileId]
   );
   return rows;
+}
+
+// Marks the caller as the one who initiated a roommate request for a
+// match the scoring pass already created. Only settable once (WHERE
+// requester_user_id IS NULL) so a match can't be "re-sent" by either
+// side after the fact, and so the other person's later Accept/Decline
+// always resolves a single, unambiguous requester.
+export async function sendMatchRequest(matchId, requesterUserId) {
+  const [result] = await pool.query(
+    `UPDATE Roommate_Match
+     SET requester_user_id = ?
+     WHERE match_id = ? AND requester_user_id IS NULL`,
+    [requesterUserId, matchId]
+  );
+  if (result.affectedRows === 0) return null;
+  return findMatchById(matchId);
 }
 
 export async function findMatchById(matchId) {

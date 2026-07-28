@@ -22,14 +22,19 @@ CREATE TABLE School_Domains (
 );
 
 CREATE TABLE Users (
-    user_id         INT AUTO_INCREMENT PRIMARY KEY,
-    school_id       INT NOT NULL,
-    name            VARCHAR(255) NOT NULL,
-    email           VARCHAR(255) NOT NULL UNIQUE,
-    password_hash   VARCHAR(255) NOT NULL,
-    email_verified  BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    user_id                     INT AUTO_INCREMENT PRIMARY KEY,
+    school_id                   INT NOT NULL,
+    name                        VARCHAR(255) NOT NULL,
+    email                       VARCHAR(255) NOT NULL UNIQUE,
+    password_hash               VARCHAR(255) NOT NULL,
+    email_verified              BOOLEAN NOT NULL DEFAULT FALSE,
+    -- Verification tokens are stored hashed (SHA-256), never in plain
+    -- text — same principle as passwords: if the DB ever leaks, a raw
+    -- token would let an attacker verify/hijack any pending signup.
+    verification_token_hash     CHAR(64),
+    verification_token_expires  TIMESTAMP NULL,
+    created_at                  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at                  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (school_id) REFERENCES Schools(school_id) ON DELETE CASCADE
 );
 
@@ -89,6 +94,7 @@ CREATE TABLE Landlords (
 CREATE TABLE Listings (
     listing_id     INT AUTO_INCREMENT PRIMARY KEY,
     landlord_id    INT,                          -- nullable: listing may be added by students before landlord info is known
+    name           VARCHAR(255),                 -- nullable: named apartment complexes have one (e.g. "The Mix"), a random single-owner rental may not
     address        VARCHAR(255) NOT NULL,
     latitude       DECIMAL(9,6),                 -- for map display / distance-from-campus sorting
     longitude      DECIMAL(9,6),
