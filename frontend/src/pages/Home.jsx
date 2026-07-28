@@ -1,10 +1,16 @@
 import { Link } from "react-router-dom";
 import logo from "../assets/dormscout-logo.png";
+import heroCampus from "../assets/HomePage-Backdrop.jpg";
 
 function Home() {
   return (
     <main className="page">
-      <section className="home-hero">
+      <section 
+        className="home-hero"
+        style={{
+          backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.68), rgba(15, 23, 42, 0.68)), url(${heroCampus})`,
+        }}
+      >
         <img src={logo} alt="DormScout logo" className="home-hero-logo" />
 
         <h1>Find Housing and Roommates with DormScout</h1>

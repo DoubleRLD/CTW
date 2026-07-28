@@ -629,34 +629,13 @@ textarea {
   position: relative;
   overflow: hidden;
   background: linear-gradient(135deg, #1f2937, #2563eb);
+  background-position: center 70%;
   color: white;
   text-align: center;
   padding: 90px 40px 130px;
   /* cancel out .page's 40px padding so the banner goes edge-to-edge */
   margin: -40px -40px 0 -40px;
   border-radius: 0 0 48px 48px;
-}
-
-.home-hero::before {
-  content: "";
-  position: absolute;
-  width: 480px;
-  height: 480px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  bottom: -220px;
-  left: -140px;
-}
-
-.home-hero::after {
-  content: "";
-  position: absolute;
-  width: 320px;
-  height: 320px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  top: -80px;
-  right: -100px;
 }
 
 .home-hero-logo {
