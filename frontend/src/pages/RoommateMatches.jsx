@@ -489,12 +489,12 @@ function RoommateMatches() {
             >
               ✕
             </button>
-            {analysisByMatch[match.match_id] && (
+            {analysisByMatch[viewingProfile.match_id] && (
                 <div>
                     <h3>AI Compatibility Analysis</h3>
                     <p>
-                        <strong>Original Score:</strong>
-                        {analysisByMatch[match.match_id].score}%
+                        <strong>Original Score:</strong>{" "}
+                        {analysisByMatch[viewingProfile.match_id].score}%
                     </p>
                     <p>
                         <strong>AI Adjustment: </strong>{" "}
@@ -502,12 +502,12 @@ function RoommateMatches() {
                         {analysisByMatch[match.match_id].adjustment} points
                     </p>
                     <p>
-                        <strong>Adjusted Score:</strong>
-                        {analysisByMatch[match.match_id].adjustedScore}%
+                        <strong>Adjusted Score:</strong>{" "}
+                        {analysisByMatch[viewingProfile.match_id].adjustedScore}%
                     </p>
-                    <p>{analysisByMatch[match.match_id].explanation}</p>
-
+                    <p>{analysisByMatch[viewingProfile.match_id].explanation}</p>
                 </div>
+              )}
 
             <div className="roommate-profile-photo profile-modal-photo">
               {viewingProfile.other_profile_picture ? (
