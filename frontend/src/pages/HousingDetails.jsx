@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { dormsApi } from "../api/dorms";
 import { listingsApi } from "../api/listings";
 import { dormReviewsApi } from "../api/dormReviews";
@@ -28,6 +28,31 @@ const RATING_FIELDS = {
 
 function emptyRatings(type) {
   return Object.fromEntries(RATING_FIELDS[type].map((f) => [f.key, 5]));
+}
+
+function formatPrice(price) {
+  if (!price) return "Price unavailable";
+  return `$${Number(price).toLocaleString()}`;
+}
+
+function normalizeAmenities(value) {
+  if (Array.isArray(value) && value.length > 0) return value;
+
+  if (typeof value === "string" && value.trim()) {
+    return value.split(",").map((item) => item.trim());
+  }
+
+  return [
+    "Wifi",
+    "Laundry",
+    "Study Lounge",
+    "Gym",
+    "Parking",
+    "Pool",
+    "Security",
+    "Package Lockers",
+    "Pet Friendly",
+  ];
 }
 
 function HousingDetails() {
@@ -90,7 +115,7 @@ function HousingDetails() {
     }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, id]);
+  }, [type, id, isAuthenticated]);
 
   function updateRating(key, value) {
     setForm((f) => ({ ...f, ratings: { ...f.ratings, [key]: Number(value) } }));
@@ -168,62 +193,158 @@ function HousingDetails() {
   if (error) return <main className="page"><p style={{ color: "crimson" }}>Error: {error}</p></main>;
   if (!place) return null;
 
-  const title = type === "dorm" ? place.name : (place.name || place.address);
-  const schoolLabel = type === "dorm" ? place.school_name : (place.school_names || "No linked school yet");
-  const secondaryLabel =
+  const title = type === "dorm" ? place.name : place.name || place.address;
+
+  const subtitle =
     type === "dorm"
-      ? "On-Campus Dorm"
-      : `${place.name ? place.address + " · " : ""}Off-Campus · ${place.bedrooms} bed · $${place.monthly_rent}/mo`;
+      ? `On-Campus - ${place.school_name || "School unavailable"}`
+      : `Off-Campus - ${place.school_names || "No linked school yet"}`;
+  
+  const price =
+    type === "dorm"
+      ? place.semester_cost || place.price
+      : place.monthly_rent || place.price;
+  
+  const priceLabel = type === "dorm" ? "/Semester" : "/Month";
+  
+  const images = [
+    place.image_url,
+    place.photo_url,
+    place.image,
+    ...(place.gallery || []),
+    ...(place.images || []),
+  ].filter(Boolean);
+  
+  const amenities = normalizeAmenities(place.amenities);
+  
+  const rating = place.avg_rating != null ? Number(place.avg_rating) : null;
 
   return (
     <main className="page">
-      <section className="details-header">
-        <PhotoPlaceholder size="hero" />
-        <h1>{title}</h1>
-        <p>{schoolLabel} · {secondaryLabel}</p>
-        <StarRating rating={place.avg_rating != null ? Number(place.avg_rating) : null} />
-        {type === 'listing' && isAuthenticated && (
-          <div style={{ marginTop: 8 }}>
+      <div className="housing-details-top">
+        <div>
+          <Link to="/housing" className="back-link">
+            ← Back to Search Results
+          </Link>
+
+          <h1>{title}</h1>
+
+          <p className="blue-text">{subtitle}</p>
+
+          <div className="housing-rating-line">
+            <StarRating rating={rating} />
+            <span>({reviews.length} reviews)</span>
+          </div>
+        </div>
+
+        <div className="details-price-box">
+          <h2>{formatPrice(price)}</h2>
+          <p>{priceLabel}</p>
+
+          <button className="primary-btn">Contact Housing</button>
+
+          {type === "listing" && isAuthenticated && (
             <button className="secondary-btn" onClick={toggleFavorite}>
-              {isFavorited ? 'Saved' : 'Save Listing'}
+              {isFavorited ? "Saved" : "Save Listing"}
             </button>
+          )}
+        </div>
+      </div>
+
+      <section className="details-gallery">
+        {images[0] ? (
+          <img className="details-main-image" src={images[0]} alt={title} />
+        ) : (
+          <div className="details-main-image details-image-placeholder">
+            <PhotoPlaceholder size="hero" />
           </div>
         )}
+
+        <div className="details-side-gallery">
+          {images.slice(1, 5).map((image) => (
+            <img key={image} src={image} alt={`${title} gallery`} />
+          ))}
+
+          {images.length <= 1 &&
+            [1, 2, 3, 4].map((item) => (
+              <div className="details-side-placeholder" key={item}>
+                <PhotoPlaceholder size="card" />
+              </div>
+            ))}
+        </div>
       </section>
 
-      <section>
-        <h2>Student Reviews</h2>
+      <section className="details-info-grid">
+        <div className="details-panel">
+          <h2>About</h2>
+          <p>
+            {place.description ||
+              place.about ||
+              `${title} is a student housing option near campus.`}
+          </p>
+        </div>
 
-        {reviews.length === 0 && (
+        <div className="details-panel">
+          <h2>Amenities</h2>
+
+          <div className="amenities-grid">
+            {amenities.map((amenity) => (
+              <span key={amenity}>• {amenity}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="reviews-section">
+        <div className="reviews-header">
+          <h2>Reviews ({reviews.length})</h2>
+        </div>
+
+        {reviews.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">📝</div>
             <h3>No reviews yet</h3>
             <p>Be the first to share your experience.</p>
           </div>
-        )}
+        ) : (
+          <div className="reviews-grid">
+            {reviews.map((review) => (
+              <div
+                className="review-card"
+                key={review.dorm_review_id ?? review.listing_review_id}
+              >
+                <div className="review-card-header">
+                  <div>
+                    <h3>{review.reviewer_name || "Student"}</h3>
 
-        <div className="card-grid">
-          {reviews.map((review) => (
-            <div className="card" key={review.dorm_review_id ?? review.listing_review_id}>
-              <h3>{review.reviewer_name}</h3>
-              {type === "dorm" && review.room_number && (
-                <p className="small-text">Room {review.room_number}</p>
-              )}
-              <StarRating rating={review.overall_rating} />
-              <p><strong>{review.semester} {review.semester_year}</strong></p>
-              <p>{review.body}</p>
-            </div>
-          ))}
-        </div>
+                    {type === "dorm" && review.room_number && (
+                      <p className="small-text">Room {review.room_number}</p>
+                    )}
+                  </div>
+
+                  <StarRating rating={review.overall_rating} />
+                </div>
+
+                <p>
+                  <strong>
+                    {review.semester} {review.semester_year}
+                  </strong>
+                </p>
+
+                <p>{review.body}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
-      <section className="card">
+      <section className="write-review-section">
         <h2>Write a Review</h2>
 
         {!isAuthenticated && <p>You need to be logged in to leave a review.</p>}
         {submitError && <p style={{ color: "crimson" }}>{submitError}</p>}
 
-        <form className="form" onSubmit={handleSubmit}>
+        <form className="review-form" onSubmit={handleSubmit}>
           {type === "dorm" && (
             <>
               <label>Room</label>
