@@ -355,7 +355,7 @@ function RoommateProfile() {
             </div>
           </div>
 
-          <button type="submit" disabled={saving}>
+          <button type="submit" className="profile-save-btn" disabled={saving}>
             {saving ? "Saving..." : "Save Profile"}
           </button>
         </form>

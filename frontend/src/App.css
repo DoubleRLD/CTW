@@ -1908,3 +1908,80 @@ textarea {
 .roommate-tabs button:active:not(:disabled) {
   transform: translateY(0) scale(0.98);
 }
+
+.hero .button-group .primary-btn,
+.hero .button-group .secondary-btn,
+.home-hero .primary-btn,
+.home-hero .secondary-btn,
+
+.profile-save-btn,
+
+.dashboard-blue-btn,
+.dashboard-green-btn,
+.dashboard-purple-btn,
+.dashboard-page .primary-btn,
+.dashboard-page .secondary-btn,
+
+.view-all-link {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.hero .button-group .primary-btn:hover,
+.hero .button-group .secondary-btn:hover,
+.home-hero .primary-btn:hover,
+.home-hero .secondary-btn:hover,
+.profile-save-btn:hover:not(:disabled),
+.dashboard-blue-btn:hover,
+.dashboard-green-btn:hover,
+.dashboard-purple-btn:hover,
+.dashboard-page .primary-btn:hover,
+.dashboard-page .secondary-btn:hover,
+.view-all-link:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
+  opacity: 0.96;
+}
+
+.hero .button-group .primary-btn:active,
+.hero .button-group .secondary-btn:active,
+.home-hero .primary-btn:active,
+.home-hero .secondary-btn:active,
+.profile-save-btn:active:not(:disabled),
+.dashboard-blue-btn:active,
+.dashboard-green-btn:active,
+.dashboard-purple-btn:active,
+.dashboard-page .primary-btn:active,
+.dashboard-page .secondary-btn:active,
+.view-all-link:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
+}
+
+.profile-save-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.dashboard-panel .view-all-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  margin: 18px auto 0;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: none;
+  transition: transform 0.18s ease, background-color 0.18s ease, opacity 0.18s ease;
+}
+
+.dashboard-panel .view-all-link:hover {
+  transform: translateY(-2px);
+  background: #eff6ff;
+  box-shadow: none;
+  opacity: 0.95;
+}
+
+.dashboard-panel .view-all-link:active {
+  transform: translateY(0) scale(0.98);
+}
