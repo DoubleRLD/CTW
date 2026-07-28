@@ -6,6 +6,7 @@ const router = Router();
 
 router.get('/me', requireAuth, MatchesController.getMyMatches);
 router.get('/:matchId/analysis', requireAuth, MatchesController.getMatchAnalysis);
+router.post('/:matchId/request', requireAuth, MatchesController.sendRoommateRequest);
 router.post('/:matchId/respond', requireAuth, MatchesController.respondToMatch);
 
 export default router;
