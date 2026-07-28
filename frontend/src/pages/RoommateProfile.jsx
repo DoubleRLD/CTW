@@ -7,6 +7,7 @@ import RangeSlider from "../components/RangeSlider";
 const DEFAULT_FORM = {
   semester: "Fall",
   semesterYear: new Date().getFullYear(),
+  housingPreference: "either",
   bio: "",
   profilePicture: "",
   roommatePetPeeve: "",
@@ -45,6 +46,7 @@ function RoommateProfile() {
         setForm({
           semester: profile.semester,
           semesterYear: profile.semester_year,
+          housingPreference: profile.housing_preference,
           bio: profile.bio || "",
           roommatePetPeeve: profile.roommate_pet_peeve || "",
           profilePicture: profile.profile_picture || "",
@@ -193,6 +195,38 @@ function RoommateProfile() {
                   onChange={(e) => update("budgetMax", e.target.value)}
                 />
               </div>
+            </div>
+            <div className='form-field'>
+              <label>Housing Preference</label>
+              <div className="housing-options">
+                <button
+                  type='button'
+                  className={form.housingPreference === "on_campus" ? "selected" : ""}
+                  onClick={() =>
+                      setForm({ ...form, housingPreference: "on_campus" })
+                }>
+                  On Campus
+                </button>
+                <button
+                  type='button'
+                  className={form.housingPreference === "off_campus" ? "selected" : ""}
+                  onClick={() =>
+                      setForm({ ...form, housingPreference: "off_campus" })
+                }>
+                  Off Campus
+                </button>
+                <button
+                  type='button'
+                  className={form.housingPreference === "either" ? "selected" : ""}
+                  onClick={() =>
+                      setForm({ ...form, housingPreference: "either" })
+                }>
+                  Either
+                </button>
+              </div>
+              <small className="housing-help">
+                Off-campus matching lets you match with students from other participating universities.
+              </small>
             </div>
 
             <div className="form-field">

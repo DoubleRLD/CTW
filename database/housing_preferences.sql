@@ -3,4 +3,5 @@
 -- nothing anywhere actually collected or returned it, so it always
 -- showed "Not specified".
 ALTER TABLE Roommate_Profile
-  ADD COLUMN housing_interest ENUM('on_campus', 'off_campus', 'either') NULL AFTER major;
+ADD COLUMN housing_preference ENUM('on_campus', 'off_campus', 'either') NOT NULL DEFAULT 'either'
+AFTER semester_year;
