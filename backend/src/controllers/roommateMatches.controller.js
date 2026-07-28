@@ -39,7 +39,12 @@ export const getMyMatches = asyncHandler(async (req, res) => {
 
   for (const candidate of candidates) {
     const existing = await MatchesModel.findMatch(myProfile.room_profile_id, candidate.room_profile_id);
-    if (!existing) {
+    // Recompute whenever there's no score yet, or the match is still
+    // 'pending' — profile edits should actually move the number for
+    // anything undecided. Once someone has accepted/rejected a match,
+    // the score is left as-is: it's the number they made that call on,
+    // and silently changing it after the fact would be confusing.
+    if (!existing || existing.status === 'pending') {
       const score = computeCompatibilityScore(myProfile, candidate);
       await MatchesModel.upsertMatchScore(myProfile.room_profile_id, candidate.room_profile_id, score);
     }
