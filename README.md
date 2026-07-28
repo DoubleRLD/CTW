@@ -15,8 +15,6 @@ The system allows students to search on-campus dorms and off-campus housing, rea
 
 npm run install-all   # installs backend + frontend dependencies
 
-If there is a error talking about 'concurrently' is not recognized as an internal or external command, operable program or batch file.
-
 npm install concurrently --save-dev      #installs in root
 
 npm run dev            # runs both servers together
