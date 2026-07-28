@@ -16,7 +16,8 @@ The system allows students to search on-campus dorms and off-campus housing, rea
 npm run install-all   # installs backend + frontend dependencies
 
 npm install concurrently --save-dev      #installs in root
-npm install nodemailer                   #installs in root
+cd backned, then npm install nodemailer                   #installs in root
+cd ..
 
 npm run dev            # runs both servers together
 
