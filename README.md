@@ -14,6 +14,11 @@ The system allows students to search on-campus dorms and off-campus housing, rea
 ## Running the project
 
 npm run install-all   # installs backend + frontend dependencies
+
+If there is a error talking about 'concurrently' is not recognized as an internal or external command, operable program or batch file.
+
+run npm install concurrently --save-dev      #installs in root
+
 npm run dev            # runs both servers together
 
 Requires a running MySQL instance — see /database/README.md for setup.
