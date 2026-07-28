@@ -1,9 +1,68 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { api } from "../api/client";
 import PageHeader from "../components/PageHeader";
 
 function Dashboard() {
   const { isAuthenticated, user, checkingAuth } = useAuth();
+
+
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [savedListings, setSavedListings] = useState([]);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [dashboardError, setDashboardError] = useState("");
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    async function loadDashboardData() {
+      setDashboardLoading(true);
+      setDashboardError("");
+
+      try {
+        const [activityResult, favoritesResult] = await Promise.allSettled([
+          api.get("/activity", { auth: true }),
+          api.get("/favorites", { auth: true }),
+        ]);
+
+        if (activityResult.status === "fulfilled") {
+          setRecentActivity(
+            activityResult.value.activities ||
+              activityResult.value.activity ||
+              activityResult.value.recentActivity ||
+              []
+          );
+        }
+
+        if (favoritesResult.status === "fulfilled") {
+          setSavedListings(
+            favoritesResult.value.favorites ||
+              favoritesResult.value.savedListings ||
+              favoritesResult.value.listings ||
+              []
+          );
+        }
+
+        if (
+          activityResult.status === "rejected" ||
+          favoritesResult.status === "rejected"
+        ) {
+          setDashboardError(
+            "Dashboard data will load once the backend endpoints are connected."
+          );
+        }
+      } catch {
+        setDashboardError(
+          "Dashboard data will load once the backend is connected."
+        );
+      } finally {
+        setDashboardLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, [isAuthenticated]);
 
   if (checkingAuth) return <main className="page"><p>Loading...</p></main>;
 
@@ -26,39 +85,158 @@ function Dashboard() {
   return (
     <main className="page">
       <PageHeader
-        title={`Welcome back, ${user?.name}`}
-        subtitle="Manage your housing search, reviews, roommate profile, and roommate matches from one place."
+        title={`Welcome back, ${user?.name || user?.email?.split("@")[0] || "Student"}! 👋`}
+        subtitle="Here's what's happening with your housing journey."
       />
 
-      <div className="card-grid">
-        <div className="card">
-          <span className="card-icon">🏠</span>
-          <h2>Housing Search</h2>
-          <p>Search for dorms and off-campus apartments near your school.</p>
-          <Link to="/housing" className="primary-btn">Search Housing</Link>
+      <section className="dashboard-actions">
+        <div className="dashboard-action-card">
+          <div className="dashboard-icon blue-icon">🏠</div>
+
+          <div className="dashboard-card-content">
+            <h2>Housing Search</h2>
+            <p>
+              Find and compare the best on-campus and off-campus housing options
+              in Georgia.
+            </p>
+
+            <Link to="/housing" className="dashboard-blue-btn">
+              Browse Housing
+            </Link>
+          </div>
         </div>
 
-        <div className="card">
-          <span className="card-icon">🔖</span>
+        <div className="dashboard-action-card">
+          <div className="dashboard-icon green-icon">👤</div>
+
+          <div className="dashboard-card-content">
+            <h2>Roommate Profile</h2>
+            <p>
+              Update your preferences and lifestyle to get better roommate
+              matches.
+            </p>
+
+            <Link to="/roommate-profile" className="dashboard-green-btn">
+              Edit Profile
+            </Link>
+          </div>
+        </div>
+
+        <div className="dashboard-action-card">
+          <div className="dashboard-icon purple-icon">👥</div>
+
+          <div className="dashboard-card-content">
+            <h2>Roommate Matches</h2>
+            <p>
+              View your matches, requests, and start conversations with
+              potential roommates.
+            </p>
+
+            <Link to="/matches" className="dashboard-purple-btn">
+              View Matches
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="dashboard-bottom-grid">
+        <div className="dashboard-panel">
+          <h2>Recent Activity</h2>
+
+          <div className="activity-list">
+            {dashboardLoading ? (
+              <p className="empty-dashboard-message">Loading activity...</p>
+            ) : recentActivity.length === 0 ? (
+              <p className="empty-dashboard-message">
+                No recent activity yet.
+              </p>
+            ) : (
+              recentActivity.map((activity) => (
+                <div
+                  className="activity-item"
+                  key={activity.id || activity.activity_id}
+                >
+                  <div className="activity-icon">{activity.icon || "📌"}</div>
+
+                  <p>
+                    {activity.text ||
+                      activity.description ||
+                      activity.message ||
+                      "Recent dashboard activity"}
+                  </p>
+
+                  <span>
+                    {activity.time ||
+                      activity.created_at ||
+                      activity.createdAt ||
+                      "Recently"}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
+          <Link to="/dashboard" className="view-all-link">
+            View all activity →
+          </Link>
+        </div>
+
+        <div className="dashboard-panel">
           <h2>Saved Listings</h2>
-          <p>View listings you've bookmarked while browsing.</p>
-          <Link to="/favorites" className="primary-btn">View Saved</Link>
-        </div>
 
-        <div className="card">
-          <span className="card-icon">📝</span>
-          <h2>Roommate Profile</h2>
-          <p>Update your lifestyle preferences and roommate questionnaire.</p>
-          <Link to="/roommate-profile" className="primary-btn">Update Profile</Link>
-        </div>
+          <div className="saved-listings-list">
+            {dashboardLoading ? (
+              <p className="empty-dashboard-message">
+                Loading saved listings...
+              </p>
+            ) : savedListings.length === 0 ? (
+              <p className="empty-dashboard-message">
+                No saved listings yet.
+              </p>
+            ) : (
+              savedListings.map((listing) => (
+                <div
+                  className="saved-listing-card"
+                  key={
+                    listing.favorite_id ||
+                    listing.id ||
+                    listing.listing_id ||
+                    listing.dorm_id
+                  }
+                >
+                  {listing.image_url || listing.image ? (
+                    <img
+                      className="saved-listing-photo"
+                      src={listing.image_url || listing.image}
+                      alt={listing.name || listing.title || "Saved listing"}
+                    />
+                  ) : (
+                    <div className="saved-listing-photo saved-placeholder">
+                      🏠
+                    </div>
+                  )}
 
-        <div className="card">
-          <span className="card-icon">🤝</span>
-          <h2>Roommate Matches</h2>
-          <p>View compatible roommate matches.</p>
-          <Link to="/matches" className="primary-btn">View Matches</Link>
+                  <div className="saved-listing-info">
+                    <h3>{listing.name || listing.title || "Saved Listing"}</h3>
+                    <p>{listing.address || listing.location || "Address unavailable"}</p>
+                    <p>{listing.city || listing.school || "School unavailable"}</p>
+                    <p>
+                      {listing.type || listing.housing_type || "Housing"}
+                      {listing.school ? ` · ${listing.school}` : ""}
+                    </p>
+                  </div>
+
+                  <div className="heart-icon">❤️</div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <Link to="/favorites" className="view-all-link">
+            View all saved listings →
+          </Link>
         </div>
-      </div>
+      </section>
     </main>
   );
 }

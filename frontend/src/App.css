@@ -917,3 +917,243 @@ textarea {
   border-radius: 10px;
   margin-bottom: 20px;
 }
+
+.dashboard-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 36px 32px 48px;
+  background: #f8fafc;
+}
+
+.dashboard-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.dashboard-action-card {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 28px;
+  min-height: 190px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-icon {
+  width: 74px;
+  height: 74px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+}
+
+.blue-icon {
+  background: #dbeafe;
+}
+
+.green-icon {
+  background: #dcfce7;
+}
+
+.purple-icon {
+  background: #ede9fe;
+}
+
+.dashboard-card-content h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+.dashboard-card-content p {
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 28px;
+}
+
+.dashboard-blue-btn,
+.dashboard-green-btn,
+.dashboard-purple-btn {
+  display: block;
+  text-align: center;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-weight: 700;
+}
+
+.dashboard-blue-btn {
+  background: #2563eb;
+}
+
+.dashboard-green-btn {
+  background: #16a34a;
+}
+
+.dashboard-purple-btn {
+  background: #7c3aed;
+}
+
+.dashboard-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 24px;
+}
+
+.dashboard-panel {
+  background: white;
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-panel h2 {
+  font-size: 20px;
+  margin-bottom: 18px;
+  color: #111827;
+}
+
+.activity-list {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.activity-item {
+  display: grid;
+  grid-template-columns: 48px 1fr 100px;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  width: 42px;
+  height: 42px;
+  background: #dbeafe;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.activity-item p {
+  color: #475569;
+}
+
+.activity-item span {
+  color: #94a3b8;
+  text-align: right;
+  font-size: 14px;
+}
+
+.saved-listings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.saved-listing-card {
+  display: grid;
+  grid-template-columns: 250px 1fr 40px;
+  gap: 20px;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  background: white;
+}
+
+.saved-listing-photo {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  background-size: cover;
+  background-position: center;
+}
+
+.saved-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dbeafe;
+  font-size: 34px;
+}
+
+.saved-listing-info h3 {
+  font-size: 20px;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.saved-listing-info p {
+  color: #64748b;
+  margin: 4px 0;
+}
+
+.heart-icon {
+  font-size: 22px;
+  padding-right: 16px;
+}
+
+.view-all-link {
+  display: block;
+  text-align: center;
+  margin-top: 18px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.empty-dashboard-message {
+  color: #64748b;
+  padding: 18px;
+}
+
+.dashboard-action-card {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 22px;
+  min-height: 190px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+}
+
+.dashboard-action-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dashboard-blue-btn,
+.dashboard-green-btn,
+.dashboard-purple-btn {
+  margin-top: auto;
+}
