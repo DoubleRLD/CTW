@@ -8,6 +8,10 @@ import listingsRouter from './routes/listings.routes.js';
 import roommateProfilesRouter from './routes/roommateProfiles.routes.js';
 import roommateMatchesRouter from './routes/roommateMatches.routes.js';
 import favoritesRouter from './routes/favorites.routes.js';
+import activityRouter from './routes/activity.routes.js';
+import moderationRouter from './routes/moderation.routes.js';
+import schoolsRouter from './routes/schools.routes.js';
+import adminUsersRouter from './routes/adminUsers.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimit.js';
 
@@ -33,6 +37,14 @@ app.use('/api/roommate-profiles', roommateProfilesRouter);
 app.use('/api/roommate-matches', roommateMatchesRouter);
 // Favorites API (bookmarks) — routes added for the "Save favorite listings" feature
 app.use('/api/favorites', favoritesRouter);
+// Derived recent-activity feed for the dashboard (saves + reviews)
+app.use('/api/activity', activityRouter);
+// Admin-only review moderation
+app.use('/api/moderation', moderationRouter);
+// Schools (public read, admin-managed write)
+app.use('/api/schools', schoolsRouter);
+// Admin-only user management
+app.use('/api/admin/users', adminUsersRouter);
 
 // Catch-all for unmatched routes
 app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
