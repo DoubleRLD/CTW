@@ -6,7 +6,7 @@ import roommateMatchesRouter from './src/routes/roommateMatches.routes.js';
 import favoritesRouter from './src/routes/favorites.routes.js';
 import activityRouter from './src/routes/activity.routes.js';
 import moderationRouter from './src/routes/moderation.routes.js';
-import schoolsRouter from './src/routes/schools.routes.js';
+import schoolsRouter from './src/routes/school.routes.js';
 import adminUsersRouter from './src/routes/adminUsers.routes.js';
 
 import { errorHandler } from './src/middleware/errorHandler.js';
