@@ -1,8 +1,9 @@
 import * as DormReviewsModel from '../models/dormReviews.model.js';
 import * as DormsModel from '../models/dorms.model.js';
 import * as RoomsModel from '../models/rooms.model.js';
+import * as ReportsModel from '../models/reviewReports.model.js';
 import { asyncHandler, ApiError } from '../middleware/errorHandler.js';
-import { createDormReviewSchema, parseOrThrow } from '../middleware/validate.js';
+import { createDormReviewSchema, reportReviewSchema, parseOrThrow } from '../middleware/validate.js';
 
 // GET /api/dorms/:dormId/reviews
 export const listReviewsForDorm = asyncHandler(async (req, res) => {
@@ -53,10 +54,34 @@ export const createReviewForDorm = asyncHandler(async (req, res) => {
   res.status(201).json(review);
 });
 
-// DELETE /api/dorms/:dormId/reviews/:reviewId  (auth required, own review only)
+// DELETE /api/dorms/:dormId/reviews/:reviewId  (auth required — own review, or any review if admin)
 export const deleteReview = asyncHandler(async (req, res) => {
   const reviewId = Number(req.params.reviewId);
+
+  if (req.user.isAdmin) {
+    const deleted = await DormReviewsModel.adminDeleteReview(reviewId);
+    if (!deleted) throw new ApiError(404, 'Review not found.');
+    return res.status(204).send();
+  }
+
   const deleted = await DormReviewsModel.deleteReview(reviewId, req.user.userId);
   if (!deleted) throw new ApiError(404, 'Review not found or not owned by you.');
   res.status(204).send();
+});
+
+// POST /api/dorms/:dormId/reviews/:reviewId/report  (auth required)
+export const reportReview = asyncHandler(async (req, res) => {
+  const reviewId = Number(req.params.reviewId);
+  const review = await DormReviewsModel.findReviewById(reviewId);
+  if (!review) throw new ApiError(404, 'Review not found.');
+
+  const { reason } = parseOrThrow(reportReviewSchema, req.body, ApiError);
+  const report = await ReportsModel.createReport({
+    reviewType: 'dorm',
+    reviewId,
+    reporterUserId: req.user.userId,
+    reason,
+  });
+
+  res.status(201).json(report);
 });
