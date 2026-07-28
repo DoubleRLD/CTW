@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as SchoolsController from '../controllers/schools.controller.js';
+import * as SchoolsController from '../controllers/school.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
