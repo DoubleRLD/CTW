@@ -17,7 +17,7 @@ const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function signToken(user) {
   return jwt.sign(
-    { userId: user.user_id, schoolId: user.school_id, email: user.email },
+    { userId: user.user_id, schoolId: user.school_id, email: user.email, isAdmin: !!user.is_admin },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -100,6 +100,10 @@ export const login = asyncHandler(async (req, res) => {
 
   if (!user.email_verified) {
     throw new ApiError(403, 'Please verify your email before logging in. Check your inbox for the verification link.');
+  }
+
+  if (user.is_banned) {
+    throw new ApiError(403, 'Your account has been suspended.');
   }
 
   const token = signToken(user);
