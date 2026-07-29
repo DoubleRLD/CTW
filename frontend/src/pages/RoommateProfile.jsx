@@ -191,18 +191,7 @@ function RoommateProfile() {
                   onChange={(e) => update("major", e.target.value)}
                 />
               </div>
-              <div className="form-field">
-                <label>Housing Interest</label>
-                <select
-                  value={form.housingInterest}
-                  onChange={(e) => update("housingInterest", e.target.value)}
-                >
-                  <option value="">Not specified</option>
-                  <option value="on_campus">On-Campus</option>
-                  <option value="off_campus">Off-Campus</option>
-                  <option value="either">Either</option>
-                </select>
-              </div>
+
             </div>
 
             <div className="form-row">

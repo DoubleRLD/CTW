@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import RoommateMatches from "./pages/RoommateMatches";
 import RoommateProfile from "./pages/RoommateProfile";
 import Favorites from "./pages/Favorites";
+import Messages from "./pages/Messages";
 import VerifyEmail from "./pages/VerifyEmail";
 import Admin from "./pages/Admin";
 
@@ -24,6 +25,7 @@ function App() {
         <Route path="/housing/:type/:id" element={<HousingDetails />} />
         <Route path="/roommate-profile" element={<RoommateProfile />} />
         <Route path="/favorites" element={<Favorites />} />
+        <Route path="/messages/:matchId" element={<Messages />} />
         <Route path="/matches" element={<RoommateMatches />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />

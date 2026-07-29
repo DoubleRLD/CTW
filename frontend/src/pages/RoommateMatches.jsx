@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { roommateMatchesApi } from "../api/roommateMatches";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { useNavigate } from "react-router-dom";
 import ScoreBadge from "../components/ScoreBadge";
 import SkeletonCards from "../components/SkeletonCards";
 import PageHeader from "../components/PageHeader";
@@ -105,23 +106,31 @@ function canMessageMatch(match) {
 function RoommateMatches() {
   const { isAuthenticated, user } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [respondingId, setRespondingId] = useState(null);
   const [analysisByMatch, setAnalysisByMatch] = useState({});
   const [analyzingId, setAnalyzingId] = useState(null);
-  const [activeTab, setActiveTab] = useState("discover");
+  const [activeTab, setActiveTab] = useState(() => {
+    return (
+        sessionStorage.getItem("roommateMatchesActiveTab") || "discover"
+    );
+  });
   const [viewingProfile, setViewingProfile] = useState(null);
 
-  function handleOpenChat(match) {
-    if (!canMessageMatch(match)) {
-      showToast("Chat becomes available after a roommate match is accepted.", "info");
-      return;
-    }
-  
-    showToast("Messaging screen still needs to be connected to the backend.", "info");
+function handleOpenChat(match) {
+  if (!canMessageMatch(match)) {
+    showToast(
+      "Chat becomes available after a roommate match is accepted.",
+      "info"
+    );
+    return;
   }
+
+  navigate(`/messages/${match.match_id}`);
+}
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -132,19 +141,25 @@ function RoommateMatches() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
+  useEffect(() => {
+  sessionStorage.setItem("roommateMatchesActiveTab", activeTab);
+  }, [activeTab]);
+
   const visibleMatches = useMemo(() => {
+    const safeMatches = Array.isArray(matches) ? matches : [];
+
     if (activeTab === "discover") {
-      return matches.filter(
+      return safeMatches.filter(
         (match) => getStatus(match) === "pending" && getRequestDirection(match, user) === "none"
       );
     }
 
     if (activeTab === "matches") {
-      return matches.filter((match) => isAcceptedMatch(match));
+      return safeMatches.filter((match) => isAcceptedMatch(match));
     }
   
     if (activeTab === "requests") {
-      return matches.filter(
+      return safeMatches.filter(
         (match) =>
           isPendingRequest(match) &&
           getRequestDirection(match, user) === "incoming"
@@ -152,14 +167,14 @@ function RoommateMatches() {
     }
   
     if (activeTab === "sent") {
-      return matches.filter(
+      return safeMatches.filter(
         (match) =>
           isPendingRequest(match) &&
           getRequestDirection(match, user) === "outgoing"
       );
     }
   
-    return matches;
+    return safeMatches;
   }, [matches, activeTab, user]);
 
   async function load() {
@@ -167,7 +182,13 @@ function RoommateMatches() {
       setLoading(true);
       setError(null);
       const data = await roommateMatchesApi.getMine(CURRENT_SEMESTER, CURRENT_YEAR);
-      setMatches(data);
+      setMatches(
+  Array.isArray(data)
+          ? data
+          : Array.isArray(data?.matches)
+            ? data.matches
+            : []
+);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -192,13 +213,22 @@ function RoommateMatches() {
     setRespondingId(matchId);
     try {
       const updated = await roommateMatchesApi.sendRequest(matchId);
+      const currentUserId = user?.id || user?.user_id;
+
       setMatches((prev) =>
-        prev.map((m) =>
-          m.match_id === matchId
-            ? { ...m, requester_user_id: updated.requester_user_id }
-            : m
-        )
-      );
+          prev.map((m) =>
+              m.match_id === matchId
+                  ? {
+            ...m,
+            ...updated,
+            status: updated?.status || "pending",
+            requester_user_id:
+              updated?.requester_user_id || currentUserId,
+        }
+      : m
+  )
+);
+      setActiveTab("sent");
       showToast("Roommate request sent!", "success");
     } catch (err) {
       showToast(err.message, "error");
@@ -498,8 +528,8 @@ function RoommateMatches() {
                     </p>
                     <p>
                         <strong>AI Adjustment: </strong>{" "}
-                        {analysisByMatch[match.match_id].adjustment > 0 ? "+" :""}
-                        {analysisByMatch[match.match_id].adjustment} points
+                        {analysisByMatch[viewingProfile.match_id].adjustment > 0 ? "+" : ""}
+                        {analysisByMatch[viewingProfile.match_id].adjustment} points
                     </p>
                     <p>
                         <strong>Adjusted Score:</strong>{" "}
