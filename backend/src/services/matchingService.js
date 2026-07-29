@@ -62,7 +62,7 @@ function budgetOverlapScore(profileA, profileB) {
   const widestRange = Math.max(aMax - aMin, bMax - bMin, 1); // avoid divide-by-zero
   return Math.min(1, overlap / widestRange);
 }
-function housingPreferencesMatch(profileA, profileB) {
+export function housingPreferencesMatch(profileA, profileB) {
   // Are the users from the same school?
   const sameSchool = profileA.school_id === profileB.school_id;
 
