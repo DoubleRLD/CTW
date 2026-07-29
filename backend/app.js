@@ -1,3 +1,7 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+
 import dormsRouter from './src/routes/dorms.routes.js';
 import authRouter from './src/routes/auth.routes.js';
 import listingsRouter from './src/routes/listings.routes.js';
