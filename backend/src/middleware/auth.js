@@ -24,17 +24,18 @@ export async function requireAuth(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const [rows] = await pool.query(
-      'SELECT is_admin, is_banned FROM Users WHERE user_id = ?',
+      'SELECT is_admin FROM Users WHERE user_id = ?',
       [decoded.userId]
     );
     const user = rows[0];
     if (!user) return next(new ApiError(401, 'Invalid or expired token.'));
-    if (user.is_banned) return next(new ApiError(403, 'Your account has been suspended.'));
+    //if (user.is_banned) return next(new ApiError(403, 'Your account has been suspended.'));
 
     req.user = { ...decoded, isAdmin: !!user.is_admin };
     next();
   } catch (err) {
-    next(new ApiError(401, 'Invalid or expired token.'));
+  console.error(err);
+  next(new ApiError(401, 'Invalid or expired token.'));
   }
 }
 

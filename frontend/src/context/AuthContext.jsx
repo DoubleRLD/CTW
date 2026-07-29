@@ -9,9 +9,17 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const saved = localStorage.getItem("user");
+  if (!saved || saved === "undefined" || saved === "null") {
+    return null;
+  }
+  try {
+    return JSON.parse(saved);
+  } catch {
+    localStorage.removeItem("user");
+    return null;
+  }
+});
   const [checkingAuth, setCheckingAuth] = useState(!!token);
 
   const logout = useCallback(() => {
@@ -25,7 +33,7 @@ export function AuthProvider({ children }) {
   // 401 (expired/invalidated token) clears the session and sends the
   // person back to login with an explanatory message, instead of every
   // subsequent request just failing silently in the background.
-  useEffect(() => {
+/*  useEffect(() => {
     setSessionExpiredHandler(() => {
       logout();
       if (!window.location.pathname.startsWith("/login")) {
@@ -33,7 +41,7 @@ export function AuthProvider({ children }) {
       }
     });
   }, [logout]);
-
+*/
   useEffect(() => {
     if (!token) {
       setCheckingAuth(false);
@@ -51,8 +59,20 @@ export function AuthProvider({ children }) {
         setUser(data.user);
         localStorage.setItem("user", JSON.stringify(data.user));
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Unable to verify session:", error);
+        // Keep the locally saved session instead of automatically logging out
+        const savedUser = localStorage.getItem("user");
+        if (savedUser && savedUser !== "undefined" && savedUser !== "null") {
+          try {
+        setUser(JSON.parse(savedUser));
+        } catch {
         logout();
+        }
+      } else {
+          logout();
+      }
+
       })
       .finally(() => setCheckingAuth(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -156,7 +176,7 @@ const login = useCallback(
         verifyEmail,
         resendVerification,
         logout,
-        isAuthenticated: !!token,
+        isAuthenticated: !!token && !!user,
         checkingAuth,
       }}
     >

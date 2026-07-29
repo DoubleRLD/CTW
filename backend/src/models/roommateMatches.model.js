@@ -42,8 +42,6 @@ export async function findMatchesForProfile(profileId) {
        u.user_id AS other_user_id,
        u.name AS other_user_name,
        s.name AS other_school_name,
-       rp.major AS other_major,
-       rp.housing_interest AS other_housing_interest,
        rp.bio AS other_bio,
        rp.profile_picture AS other_profile_picture,
        rp.roommate_pet_peeve AS other_roommate_pet_peeve,

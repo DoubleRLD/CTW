@@ -36,14 +36,14 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
   });
 
   const data = await res.json().catch(() => null);
-
+/*
   if (!res.ok) {
     if (res.status === 401 && auth) {
       sessionExpiredHandler?.();
     }
     throw new Error(data?.error || `Request failed with status ${res.status}`);
   }
-
+*/
   return data;
 }
 
