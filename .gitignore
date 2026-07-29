@@ -5,3 +5,8 @@ node_modules/
 .env.*
 **/.env
 **/.env.*
+
+.env.teammate-copy
+.env*
+!.env.example.idea/
+.idea/
