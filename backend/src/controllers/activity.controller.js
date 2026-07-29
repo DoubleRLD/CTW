@@ -9,7 +9,8 @@ const ICONS = {
 
 // GET /api/activity/me — recent saves + reviews for the authenticated user
 export const getMyActivity = asyncHandler(async (req, res) => {
-  const rows = await ActivityModel.getRecentActivity(req.user.userId, 10);
+  const limit = req.query.limit ? Number(req.query.limit) : 10;
+  const rows = await ActivityModel.getRecentActivity(req.user.userId, limit);
 
   res.json({
     activities: rows.map((row) => ({
