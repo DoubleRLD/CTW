@@ -42,7 +42,7 @@ function normalizeDorm(d) {
     price: d.semester_cost ?? d.price ?? null,
     priceLabel: "/Semester",
     distance: d.distance || `Near ${d.school_name || "campus"}`,
-    image: d.image_url || d.photo_url || d.image || getDormImage(d.name),
+    image: d.image_url || d.photo_url || d.image || getDormImage(d.name, d.school_name),
     amenities: normalizeAmenities(d.amenities, [
       "Wifi",
       "Laundry",
