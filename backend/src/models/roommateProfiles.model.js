@@ -12,7 +12,7 @@ export async function findProfileById(profileId) {
   const [rows] = await pool.query(
     `SELECT rp.*, u.name AS user_name
      FROM Roommate_Profile rp
-     JOIN Users u ON u.user_id = rp.user_id
+     JOIN users u ON u.user_id = rp.user_id
      WHERE rp.room_profile_id = ?`,
     [profileId]
   );
@@ -26,7 +26,7 @@ export async function findProfilesForMatching({ schoolId, semester, semesterYear
   const [rows] = await pool.query(
     `SELECT rp.*, u.name AS user_name
      FROM Roommate_Profile rp
-     JOIN Users u ON u.user_id = rp.user_id
+     JOIN users u ON u.user_id = rp.user_id
      WHERE rp.semester = ? 
        AND rp.semester_year = ? 
        AND rp.user_id != ?`,

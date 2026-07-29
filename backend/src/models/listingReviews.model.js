@@ -4,7 +4,7 @@ export async function findReviewsByListing(listingId) {
   const [rows] = await pool.query(
     `SELECT lr.*, u.name AS reviewer_name
      FROM Listing_Review lr
-     JOIN Users u ON u.user_id = lr.user_id
+     JOIN users u ON u.user_id = lr.user_id
      WHERE lr.listing_id = ?
      ORDER BY lr.created_at DESC`,
     [listingId]

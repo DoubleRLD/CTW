@@ -1,13 +1,13 @@
 import { pool } from '../config/db.js';
 
 export async function findUserByEmail(email) {
-  const [rows] = await pool.query('SELECT * FROM Users WHERE email = ?', [email]);
+  const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
   return rows[0] || null;
 }
 
 export async function findUserById(userId) {
   const [rows] = await pool.query(
-    'SELECT user_id, school_id, name, email, email_verified, is_admin, created_at FROM Users WHERE user_id = ?',
+    'SELECT user_id, school_id, name, email, email_verified, is_admin, created_at FROM users WHERE user_id = ?',
     [userId]
   );
   return rows[0] || null;
@@ -17,7 +17,7 @@ export async function findUserById(userId) {
 // before this is called — see auth.controller.js.
 export async function createUser({ schoolId, name, email, passwordHash, verificationTokenHash, verificationTokenExpires }) {
   const [result] = await pool.query(
-    `INSERT INTO Users
+    `INSERT INTO users
        (school_id, name, email, password_hash, verification_token_hash, verification_token_expires)
      VALUES (?, ?, ?, ?, ?, ?)`,
     [schoolId, name, email, passwordHash, verificationTokenHash, verificationTokenExpires]
@@ -42,7 +42,7 @@ export async function findSchoolByDomain(domain) {
 // endpoint, never at rest in the database.
 export async function findUserByVerificationTokenHash(tokenHash) {
   const [rows] = await pool.query(
-    'SELECT * FROM Users WHERE verification_token_hash = ?',
+    'SELECT * FROM users WHERE verification_token_hash = ?',
     [tokenHash]
   );
   return rows[0] || null;
@@ -50,7 +50,7 @@ export async function findUserByVerificationTokenHash(tokenHash) {
 
 export async function markEmailVerified(userId) {
   await pool.query(
-    `UPDATE Users
+    `UPDATE users
      SET email_verified = TRUE, verification_token_hash = NULL, verification_token_expires = NULL
      WHERE user_id = ?`,
     [userId]
@@ -60,7 +60,7 @@ export async function markEmailVerified(userId) {
 
 export async function setVerificationToken(userId, tokenHash, expiresAt) {
   await pool.query(
-    'UPDATE Users SET verification_token_hash = ?, verification_token_expires = ? WHERE user_id = ?',
+    'UPDATE users SET verification_token_hash = ?, verification_token_expires = ? WHERE user_id = ?',
     [tokenHash, expiresAt, userId]
   );
 }
@@ -71,7 +71,7 @@ export async function findAllUsersForAdmin() {
   const [rows] = await pool.query(
     `SELECT u.user_id, u.name, u.email, u.email_verified, u.is_admin, u.is_banned,
             u.created_at, s.name AS school_name
-     FROM Users u
+     FROM users u
      LEFT JOIN Schools s ON s.school_id = u.school_id
      ORDER BY u.created_at DESC`
   );
@@ -79,11 +79,11 @@ export async function findAllUsersForAdmin() {
 }
 
 export async function setUserBanned(userId, banned) {
-  await pool.query('UPDATE Users SET is_banned = ? WHERE user_id = ?', [banned, userId]);
+  await pool.query('UPDATE users SET is_banned = ? WHERE user_id = ?', [banned, userId]);
   return findUserById(userId);
 }
 
 export async function setUserAdmin(userId, isAdmin) {
-  await pool.query('UPDATE Users SET is_admin = ? WHERE user_id = ?', [isAdmin, userId]);
+  await pool.query('UPDATE users SET is_admin = ? WHERE user_id = ?', [isAdmin, userId]);
   return findUserById(userId);
 }

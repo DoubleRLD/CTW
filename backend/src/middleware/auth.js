@@ -24,7 +24,7 @@ export async function requireAuth(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const [rows] = await pool.query(
-      'SELECT is_admin FROM Users WHERE user_id = ?',
+      'SELECT is_admin FROM users WHERE user_id = ?',
       [decoded.userId]
     );
     const user = rows[0];

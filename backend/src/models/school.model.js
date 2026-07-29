@@ -11,7 +11,7 @@ export async function findAllSchools() {
        COUNT(DISTINCT u.user_id) AS user_count
      FROM Schools s
      LEFT JOIN School_Domains sd ON sd.school_id = s.school_id
-     LEFT JOIN Users u ON u.school_id = s.school_id
+     LEFT JOIN users u ON u.school_id = s.school_id
      GROUP BY s.school_id
      ORDER BY s.name`
   );

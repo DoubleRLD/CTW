@@ -31,9 +31,9 @@ export async function findOpenReports() {
        author.name AS review_author_name,
        d.name AS context_name
      FROM Review_Report rr
-     JOIN Users reporter ON reporter.user_id = rr.reporter_user_id
+     JOIN users reporter ON reporter.user_id = rr.reporter_user_id
      JOIN Dorm_Review dr ON dr.dorm_review_id = rr.review_id
-     JOIN Users author ON author.user_id = dr.user_id
+     JOIN users author ON author.user_id = dr.user_id
      JOIN Rooms r ON r.room_id = dr.room_id
      JOIN Dorms d ON d.dorm_id = r.dorm_id
      WHERE rr.review_type = 'dorm' AND rr.status = 'open'`
@@ -48,9 +48,9 @@ export async function findOpenReports() {
        author.name AS review_author_name,
        COALESCE(l.name, l.address) AS context_name
      FROM Review_Report rr
-     JOIN Users reporter ON reporter.user_id = rr.reporter_user_id
+     JOIN users reporter ON reporter.user_id = rr.reporter_user_id
      JOIN Listing_Review lr ON lr.listing_review_id = rr.review_id
-     JOIN Users author ON author.user_id = lr.user_id
+     JOIN users author ON author.user_id = lr.user_id
      JOIN Listings l ON l.listing_id = lr.listing_id
      WHERE rr.review_type = 'listing' AND rr.status = 'open'`
   );

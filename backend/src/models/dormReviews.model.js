@@ -4,7 +4,7 @@ export async function findReviewsByRoom(roomId) {
   const [rows] = await pool.query(
     `SELECT dr.*, u.name AS reviewer_name
      FROM Dorm_Review dr
-     JOIN Users u ON u.user_id = dr.user_id
+     JOIN users u ON u.user_id = dr.user_id
      WHERE dr.room_id = ?
      ORDER BY dr.created_at DESC`,
     [roomId]
@@ -18,7 +18,7 @@ export async function findReviewsByDorm(dormId) {
   const [rows] = await pool.query(
     `SELECT dr.*, u.name AS reviewer_name, r.room_number
      FROM Dorm_Review dr
-     JOIN Users u ON u.user_id = dr.user_id
+     JOIN users u ON u.user_id = dr.user_id
      JOIN Rooms r ON r.room_id = dr.room_id
      WHERE r.dorm_id = ?
      ORDER BY dr.created_at DESC`,

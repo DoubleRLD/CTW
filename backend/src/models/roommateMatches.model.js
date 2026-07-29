@@ -61,7 +61,7 @@ export async function findMatchesForProfile(profileId) {
      FROM Roommate_Match m
      JOIN Roommate_Profile rp
        ON rp.room_profile_id = CASE WHEN m.profile_id_a = ? THEN m.profile_id_b ELSE m.profile_id_a END
-     JOIN Users u ON u.user_id = rp.user_id
+     JOIN users u ON u.user_id = rp.user_id
      LEFT JOIN Schools s ON s.school_id = rp.school_id
      WHERE m.profile_id_a = ? OR m.profile_id_b = ?
      ORDER BY m.compatibility_score DESC`,

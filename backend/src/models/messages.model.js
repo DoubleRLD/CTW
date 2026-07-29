@@ -82,7 +82,7 @@ export async function findMessagesByConversation(conversationId) {
       m.sent_at,
       m.read_at
     FROM Messages m
-    JOIN Users u
+    JOIN users u
       ON u.user_id = m.sender_user_id
     WHERE m.conversation_id = ?
     ORDER BY m.sent_at ASC, m.message_id ASC
@@ -124,7 +124,7 @@ export async function createMessage({
       m.sent_at,
       m.read_at
     FROM Messages m
-    JOIN Users u
+    JOIN users u
       ON u.user_id = m.sender_user_id
     WHERE m.message_id = ?
     LIMIT 1
