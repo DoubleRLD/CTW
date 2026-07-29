@@ -3,15 +3,15 @@
 // yet, so these local images are the fallback whenever a dorm/listing
 // doesn't come back with its own photo URL from the API.
 
-import pattonHall from "./dorms/Patton_Hall.jpg";
-import piedmontCentral from "./dorms/Piedmont_Central.jpg";
-import piedmontNorth from "./dorms/Piedmont_North.jpg";
-import universityCommons from "./dorms/University_Commons.jpg";
-import universityLofts from "./dorms/University_Lofts.jpg";
-import greekHousing from "./dorms/Greek_Housing.jpg";
-import greekHousing2 from "./dorms/Greek_Housing_2.jpg";
-import greekHousing3 from "./dorms/Greek_Housing_3.jpg";
-import greekHousing4 from "./dorms/Greek_Housing_4.jpg";
+import pattonHall from "./dorms/Patton Hall.jpg";
+import piedmontCentral from "./dorms/Piedmont Central.jpg";
+import piedmontNorth from "./dorms/Piedmont North.jpg";
+import universityCommons from "./dorms/University Commons.jpg";
+import universityLofts from "./dorms/University Lofts.jpg";
+import greekHousing from "./dorms/Greek Housing.jpg";
+import greekHousing2 from "./dorms/Greek Housing 2.jpg";
+import greekHousing3 from "./dorms/Greek Housing 3.jpg";
+import greekHousing4 from "./dorms/Greek Housing 4.jpg";
 
 import oakHall from "./dorms/Oak_Hall.jpg";
 import elmHall from "./dorms/Elm_Hall.jpg";

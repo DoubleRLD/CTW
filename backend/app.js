@@ -8,9 +8,11 @@ import activityRouter from './src/routes/activity.routes.js';
 import moderationRouter from './src/routes/moderation.routes.js';
 import schoolsRouter from './src/routes/school.routes.js';
 import adminUsersRouter from './src/routes/adminUsers.routes.js';
-
 import { errorHandler } from './src/middleware/errorHandler.js';
 import { apiLimiter } from './src/middleware/rateLimit.js';
+import dotenv from "dotenv";
+import express from "express";
+import cors from "cors";
 
 dotenv.config();
 

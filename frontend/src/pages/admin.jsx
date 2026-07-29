@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { moderationApi } from "../api/moderation";
 import { adminUsersApi } from "../api/adminUsers";
-import { schoolsApi } from "../api/schools";
+import { schoolsApi } from "../api/school";
 import { dormsApi } from "../api/dorms";
 import { listingsApi } from "../api/listings";
 import PageHeader from "../components/PageHeader";
