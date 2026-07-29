@@ -60,25 +60,20 @@ cd CTW
 npm run install-all
 ```
 
-### 2. Set up the database
+### 2. Configure Environment Variables
 
-Create a MySQL database, then load the schema, seed data, and migrations **in this order**:
+Create a `backend/.env` file (or use the one provided by the team) with the appropriate Aiven database credentials:
 
-```bash
-mysql -u <user> -p <db_name> < database/schema.sql
-mysql -u <user> -p <db_name> < database/seed.sql
-mysql -u <user> -p <db_name> < database/dorms_seed.sql
-mysql -u <user> -p <db_name> < database/off_campus_gsu_seed.sql
-mysql -u <user> -p <db_name> < database/add_favorites_table.sql
-mysql -u <user> -p <db_name> < database/rooms_seed.sql
-mysql -u <user> -p <db_name> < database/add_requester_to_matches.sql
-mysql -u <user> -p <db_name> < database/add_major_to_roommate_profile.sql
-mysql -u <user> -p <db_name> < database/add_housing_interest_to_roommate_profile.sql
-mysql -u <user> -p <db_name> < database/add_image_url_to_dorms_and_listings.sql
-mysql -u <user> -p <db_name> < database/add_review_moderation.sql
-mysql -u <user> -p <db_name> < database/add_user_banning.sql
-mysql -u <user> -p <db_name> < database/add_listing_ownership.sql
-```
+DB_HOST=dormscope-dormscopet6.d.aivencloud.com
+DB_USER=avnadmin
+DB_PORT=11889
+DB_PASSWORD= * sent privately to group *
+DB_NAME=defaultdb
+DB_SSL=true
+
+JWT_SECRET= * sent privately to group *
+GEMINI_API_KEY= * sent privately to group *
+
 
 ### 3. Configure environment variables
 
