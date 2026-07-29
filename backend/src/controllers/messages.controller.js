@@ -1,5 +1,6 @@
 import * as MessagesModel from "../models/messages.model.js";
 import { asyncHandler, ApiError } from "../middleware/errorHandler.js";
+import { validateMessage } from "../services/messageValidation.js";
 
 // GET /api/messages/:matchId
 export const getConversation = asyncHandler(async (req, res) => {
@@ -14,6 +15,8 @@ export const getConversation = asyncHandler(async (req, res) => {
       "You can only message users from an accepted roommate match."
     );
   }
+
+
 
 let conversation =
   await MessagesModel.findConversationByMatch(matchId);
@@ -38,8 +41,10 @@ export const sendMessage = asyncHandler(async (req, res) => {
   const userId = req.user.userId;
   const messageText = req.body.message?.trim();
 
-  if (!messageText) {
-    throw new ApiError(400, "Message cannot be empty.");
+  if (!validateMessage(message)) {
+    return res.status(400).json({
+      error: "Invalid message."
+    });
   }
 
   const match = await MessagesModel.findAcceptedMatchForUser(matchId, userId);
