@@ -13,6 +13,7 @@ import RoommateProfile from "./pages/RoommateProfile";
 import Favorites from "./pages/Favorites";
 import VerifyEmail from "./pages/VerifyEmail";
 import Admin from "./pages/Admin";
+import ActivityHistory from "./pages/ActivityHistory";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/matches" element={<RoommateMatches />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/activity" element={<ActivityHistory />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />

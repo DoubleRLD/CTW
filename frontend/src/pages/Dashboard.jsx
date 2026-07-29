@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
 import PageHeader from "../components/PageHeader";
+import { getListingImage } from "../assets/housingImages";
 
 function Dashboard() {
   const { isAuthenticated, user, checkingAuth } = useAuth();
-
 
   const [recentActivity, setRecentActivity] = useState([]);
   const [savedListings, setSavedListings] = useState([]);
@@ -21,32 +21,26 @@ function Dashboard() {
       setDashboardError("");
 
       try {
-        const [activityResult, favoritesResult] = await Promise.allSettled([
-          api.get("/activity", { auth: true }),
+        const [activityResult, favoriteIdsResult] = await Promise.allSettled([
+          api.get("/activity/me", { auth: true }),
           api.get("/favorites", { auth: true }),
         ]);
 
         if (activityResult.status === "fulfilled") {
-          setRecentActivity(
-            activityResult.value.activities ||
-              activityResult.value.activity ||
-              activityResult.value.recentActivity ||
-              []
-          );
+          setRecentActivity(activityResult.value.activities || []);
         }
 
-        if (favoritesResult.status === "fulfilled") {
-          setSavedListings(
-            favoritesResult.value.favorites ||
-              favoritesResult.value.savedListings ||
-              favoritesResult.value.listings ||
-              []
+        if (favoriteIdsResult.status === "fulfilled") {
+          const ids = favoriteIdsResult.value || [];
+          const details = await Promise.all(
+            ids.slice(0, 3).map((id) => api.get(`/listings/${id}`).catch(() => null))
           );
+          setSavedListings(details.filter(Boolean));
         }
 
         if (
           activityResult.status === "rejected" ||
-          favoritesResult.status === "rejected"
+          favoriteIdsResult.status === "rejected"
         ) {
           setDashboardError(
             "Dashboard data will load once the backend endpoints are connected."
@@ -176,7 +170,7 @@ function Dashboard() {
             )}
           </div>
 
-          <Link to="/dashboard" className="view-all-link">
+          <Link to="/activity" className="view-all-link">
             View all activity →
           </Link>
         </div>
@@ -204,11 +198,15 @@ function Dashboard() {
                     listing.dorm_id
                   }
                 >
-                  {listing.image_url || listing.image ? (
+                  {listing.image_url || listing.image || getListingImage(listing.address, listing.bedrooms) ? (
                     <img
                       className="saved-listing-photo"
-                      src={listing.image_url || listing.image}
-                      alt={listing.name || listing.title || "Saved listing"}
+                      src={
+                        listing.image_url ||
+                        listing.image ||
+                        getListingImage(listing.address, listing.bedrooms)
+                      }
+                      alt={listing.name || listing.address || "Saved listing"}
                     />
                   ) : (
                     <div className="saved-listing-photo saved-placeholder">
@@ -217,13 +215,10 @@ function Dashboard() {
                   )}
 
                   <div className="saved-listing-info">
-                    <h3>{listing.name || listing.title || "Saved Listing"}</h3>
-                    <p>{listing.address || listing.location || "Address unavailable"}</p>
-                    <p>{listing.city || listing.school || "School unavailable"}</p>
-                    <p>
-                      {listing.type || listing.housing_type || "Housing"}
-                      {listing.school ? ` · ${listing.school}` : ""}
-                    </p>
+                    <h3>{listing.name || listing.address || "Saved Listing"}</h3>
+                    <p>{listing.address || "Address unavailable"}</p>
+                    <p>{listing.school_names || "No linked school yet"}</p>
+                    <p>{listing.bedrooms} bed · ${listing.monthly_rent}/mo</p>
                   </div>
 
                   <div className="heart-icon">❤️</div>
